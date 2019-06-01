@@ -1,3 +1,4 @@
+ _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
 include("C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/ZRA9.jl")
 include("C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/m_ZRA_CG_fun.jl")
 gurobi_env = Gurobi.Env();

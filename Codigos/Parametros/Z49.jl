@@ -1,4 +1,4 @@
-include("C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Parametros/Datos_CEA2013.jl")
 
 lar = 7     #6
 anc = 7     #7

@@ -1,4 +1,5 @@
-include("C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/Z25.jl")
+_ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
+include(_ref_*"Codigos/Parametros/Z9.jl")
 using Statistics, JuMP, GLPK, Gurobi
 
 #Cantidad de cuarteles

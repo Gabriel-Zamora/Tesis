@@ -1,5 +1,5 @@
-include("C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/Datos_CEA2013.jl")
-include("C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/Datos_GA2018.jl")
+include(_ref_*"Codigos/Parametros/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Parametros/Datos_GA2018.jl")
 
 lar = 4     #6
 anc = 4     #7

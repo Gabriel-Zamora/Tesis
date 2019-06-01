@@ -1,4 +1,6 @@
-include("C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/ZRA25.jl")
+_ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
+include(_ref_*"Codigos/Parametros/ZRA9.jl")
+include(_ref_*"Codigos/m_ZRA/m_ZRA_CG_fun.jl")
 using Statistics, JuMP, GLPK, Gurobi
 @time begin
 #Cantidad de cuarteles
