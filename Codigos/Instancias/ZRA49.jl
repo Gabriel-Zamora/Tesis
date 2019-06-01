@@ -1,10 +1,10 @@
-include(_ref_*"Codigos/Parametros/Datos_CEA2013.jl")
-include(_ref_*"Codigos/Parametros/Datos_GA2018.jl")
+include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Instancias/Datos_GA2018.jl")
 
-lar = 9     #6
-anc = 9     #7
+lar = 7     #6
+anc = 7     #7
 
-L = 26
+L = 16
 
 #Interpolación
 using Interpolations

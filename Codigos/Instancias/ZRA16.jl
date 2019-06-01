@@ -1,7 +1,10 @@
-include(_ref_*"Codigos/Parametros/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Instancias/Datos_GA2018.jl")
 
-lar = 8     #6
-anc = 8     #7
+lar = 4     #6
+anc = 4     #7
+
+L = 8
 
 #Interpolación
 using Interpolations
@@ -13,4 +16,7 @@ for i=0:lar-1
     end
 end
 
+esp = 6
+fam = 4
+T = 4
 ;

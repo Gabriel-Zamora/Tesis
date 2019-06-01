@@ -1,5 +1,5 @@
-include(_ref_*"Codigos/Parametros/Datos_CEA2013.jl")
-include(_ref_*"Codigos/Parametros/Datos_GA2018.jl")
+include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Instancias/Datos_GA2018.jl")
 
 lar = 10     #6
 anc = 10     #7

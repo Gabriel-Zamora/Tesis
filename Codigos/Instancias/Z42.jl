@@ -1,4 +1,4 @@
-include(_ref_*"Codigos/Parametros/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
 
 lar = 6     #6
 anc = 7     #7

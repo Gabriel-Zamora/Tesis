@@ -1,7 +1,7 @@
-include(_ref_*"Codigos/Parametros/Datos_CEA2013.jl")
+include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
 
-lar = 6     #6
-anc = 6     #7
+lar = 8     #6
+anc = 8     #7
 
 #Interpolación
 using Interpolations
