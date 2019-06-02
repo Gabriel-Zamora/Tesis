@@ -27,7 +27,12 @@ Adyacencia()
 Dimensiones = sort(unique([i*j for i=1:max(lar,anc) for j=1:min(lar,anc) if (i*j != 1)&(i*j != lar*anc)]),rev=true)
 
 CG_0()
-#println(FPME(C))
+println(FPME(C))
 end
 # println("")
 # particion()
+
+# mapear(1)
+# mapear(2)
+# mapear(3)
+# mapear(4)

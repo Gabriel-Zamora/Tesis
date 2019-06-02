@@ -203,24 +203,33 @@ function particion()
     end
 end
 
-function mapear()  #Aun no lo adapto
+function mapear(t)  #Falta agregar titulos
    Matriz = zeros(lar,anc)
    iter = 0
    areas = Dict()
-   for i=1:Q
-      if value(q_pe[i])==1
-          iter += 1
-          areas[iter] = i
-          Matriz = Matriz + iter*zonas[i]
-      end
+   for k=1:Q
+       if value(q_pe[k])>0
+           for i in I
+               if value(y_pe[k,i,t])>0
+                   for f=1:fam
+                       if i in familias[f]
+                           Matriz = Matriz + (f-1)*zonas[k]
+                       end
+                   end
+               end
+           end
+       end
    end
 
    mapa = heatmap(
        x=["Z"*string(i) for i=1:lar],
        y=["Z"*string(i) for i=1:anc],
-       z=Matriz)
+       z=Matriz,
+       title = "Hola")
 
-   plot(mapa)
+   layout = Layout(;title = "Periodo "*string(t))
+
+   plot(mapa, layout)
 end
 
 ###############################################################################
