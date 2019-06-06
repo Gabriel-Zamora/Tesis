@@ -1,24 +1,38 @@
-using Statistics, JuMP, GLPK, Gurobi, Plotly
+using Statistics, JuMP, Gurobi, Plotly
 
 ###############################################################################
                     # FUNCIONES #
 ###############################################################################
-function FPM(Col)
-    Q, = size(Col)
+function FPM(Z=1:Q ,modo=0)
     global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
-    @variable(PM, q[1:Q] >= 0)
+    @variable(PM, q[Z] >= 0)
     @objective(PM, Min, sum(q))
-    @constraint(PM,rpii, sum(((sum(Col[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=1:Q) <= vt*(lar*anc)*(1-a))
-    @constraint(PM,rpp[s=1:lar*anc],sum(Col[z,s]*q[z] for z=1:Q) == 1)
+    @constraint(PM,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z in Z) <= vt*(lar*anc)*(1-a))
+    @constraint(PM,rpp[s=1:lar*anc],sum(C[z,s]*q[z] for z in Z) == 1)
+
     optimize!(PM)
 
-    pii = dual(rpii)
-    vpp = [dual(rpp[s]) for s=1:lar*anc]
-    pp = zeros(lar,anc)
-    for j=1:anc
-        pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
+    if modo == 0
+        pii = dual(rpii)
+        vpp = [dual(rpp[s]) for s=1:lar*anc]
+        pp = zeros(lar,anc)
+        for j=1:anc
+            pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
+        end
+        return pii,pp
+    else
+        zz = [0]
+        vv = [0]
+        su = [0]
+        for z in Z
+            if (value(q[z])>0)
+                zz = [zz;z]
+                vv = [vv;value(q[z])]
+                su = [su;sum(C[z,:])]
+            end
+        end
+        return sort(DataFrame(z=zz,val=vv,sum=su),(:val,:sum),rev=true)
     end
-    return pii,pp
 end
 
 function FPME(Col)
@@ -131,7 +145,7 @@ function agregar_0(x, Col)
         global Q += 1
         global C = [C; q_s']
         global varianzas = [varianzas ; Vari(x)]
-        global vect = FPM(C)
+        global vect = FPM()
         filter!(x->x≠Col,Columnas)
         Zonas(1)
     end
@@ -214,7 +228,7 @@ end
 
 function cg_0S1(niter = 1e6)
     for fm in Formas
-        global vect = FPM(C)
+        global vect = FPM()
         for Col in Columnas[fm]
             H, W, cI, cJ = Col
             X = zeros(lar,anc)
@@ -265,7 +279,7 @@ function agregar_0S3(x, Col, dim)
         global Q += 1
         global C = [C; q_s']
         global varianzas = [varianzas ; Vari(x)]
-        global vect = FPM(C)
+        global vect = FPM()
         filter!(x->x≠Col,Columnas[dim])
         Zonas(1)
     end
@@ -401,7 +415,7 @@ function cg_0S4(niter = 1e6)
                     end
                 end
             end
-            global vect = FPM(C)
+            global vect = FPM()
         end
         if q == Q
             flag = false
