@@ -96,6 +96,7 @@ function probar(x)
     return prueba
 end
 
+
 function particion()
    Matriz = zeros(lar,anc)
    for i=1:Q

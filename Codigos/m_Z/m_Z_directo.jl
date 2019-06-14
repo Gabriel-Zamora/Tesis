@@ -1,7 +1,7 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_*"Codigos/Instancias/Z36.jl")
+include(_ref_*"Codigos/Instancias/Z9.jl")
 using Statistics, JuMP, Gurobi
-
+@time begin
 #Cantidad de cuarteles
 Q = sum(i for i=1:lar)*sum(j for j=1:anc)
 #Cuarteles
@@ -68,3 +68,4 @@ optimize!(m)
 
 @show objective_value(m)
 @show sum([ value(q[i]) for i in 1:Q ])
+end
