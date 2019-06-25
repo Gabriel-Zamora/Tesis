@@ -21,3 +21,5 @@ zonas = Dict()
 Zonas()
 
 BnP()
+
+display(Soluciones)

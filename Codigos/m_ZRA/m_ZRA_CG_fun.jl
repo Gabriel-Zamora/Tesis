@@ -2,25 +2,40 @@ using Statistics, JuMP, Gurobi, Plotly
 ###############################################################################
                     # FUNCIONES Z#
 ###############################################################################
-function FPMZ(Col)
-    Q, = size(Col)
+function FPMZ(Z=1:Q ,modo=0)
     global PMZ = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
-    @variable(PMZ, q[1:Q] >= 0)
+    @variable(PMZ, q[Z] >= 0)
     @objective(PMZ, Min, sum(q))
-    @constraint(PMZ,rpii, sum(((sum(Col[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=1:Q) <= vt*(lar*anc)*(1-a))
-    @constraint(PMZ,rpp[s=1:lar*anc],sum(Col[z,s]*q[z] for z=1:Q) == 1)
+    @constraint(PMZ,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z in Z) <= vt*(lar*anc)*(1-a))
+    @constraint(PMZ,rpp[s=1:lar*anc],sum(C[z,s]*q[z] for z in Z) == 1)
+
     optimize!(PMZ)
 
-    pii = dual(rpii)
-    vpp = [dual(rpp[s]) for s=1:lar*anc]
-    pp = zeros(lar,anc)
-    for j=1:anc
-        pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
+    if modo == 0
+        pii = dual(rpii)
+        vpp = [dual(rpp[s]) for s=1:lar*anc]
+        pp = zeros(lar,anc)
+        for j=1:anc
+            pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
+        end
+        return pii,pp
+    else
+        zz = [0]
+        vv = [0]
+        su = [0]
+        for z in Z
+            if (value(q[z])>0)
+                zz = [zz;z]
+                vv = [vv;value(q[z])]
+                su = [su;sum(C[z,:])]
+            end
+        end
+        return sort(DataFrame(z=zz,val=vv,sum=su),(:val,:sum),rev=true)
     end
-    return pii,pp
 end
 
-function FPMEZ(Col)
+
+function FPMEZ(Col=C)
     Q, = size(Col)
     global PMEZ = Model(with_optimizer(Gurobi.Optimizer,Presolve=0,OutputFlag=0,gurobi_env))
     @variable(PMEZ, q[1:Q], Bin)
@@ -42,48 +57,63 @@ end
 ###############################################################################
                     # FUNCIONES ZRA#
 ###############################################################################
-function FPM(Col)
-    Q, = size(Col)
+function FPM(Z=1:Q,Ay=A,modo=0)
     global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
 
-    @variable(PM, q[1:Q] >= 0)
-    @variable(PM, y[1:Q,I,1:T] >= 0)
+    @variable(PM, q[Z] >= 0)
+    @variable(PM, y[Z,I,1:T] >= 0)
 
-    @objective(PM, Min, -sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in 1:Q))
+    @objective(PM, Min, -sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
 
-    @constraint(PM,[f=1:fam-1,a in A,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
-    @constraint(PM,[k=1:Q,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
+    @constraint(PM,[f=1:fam-1,a in Ay,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
+    @constraint(PM,[k=Z,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
 
-    @constraint(PM,rp1[k=1:Q,t=1:T],sum(y[k,:,t])-q[k] == 0)
-    @constraint(PM,rp2[k=1:Q], sum(y[k,esp,:])-q[k] == 0)
+    global rr1 = @constraint(PM,rp1[k=Z,t=1:T],sum(y[k,:,t])-q[k] == 0)
+    global rr2 = @constraint(PM,rp2[k=Z], sum(y[k,esp,:])-q[k] == 0)
 
     @constraint(PM,rpc,sum(q) <= L)
-    @constraint(PM,rpii, sum(((sum(Col[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=1:Q) <= vt*(lar*anc)*(1-a))
-    @constraint(PM,rpp[s=1:lar*anc],sum(Col[z,s]*q[z] for z=1:Q) == 1)
+    @constraint(PM,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=Z) <= vt*(lar*anc)*(1-a))
+    @constraint(PM,rpp[s=1:lar*anc],sum(C[z,s]*q[z] for z=Z) == 1)
 
     optimize!(PM)
 
-    pii = dual(rpii)
-    pc = dual(rpc)
-    vpp = [dual(rpp[s]) for s=1:lar*anc]
-    pp = zeros(lar,anc)
-    for j=1:anc
-        pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
-    end
-
-    p1 = zeros(T)
-    p2 = 0
-    for i=1:lar*anc
-        if value(q[i]) == 0
-            p1[:] = [dual(rp1[i,t]) for t=1:T]
-            p2 = dual(rp2[i])
+    if modo==0
+        pii = dual(rpii)
+        pc = dual(rpc)
+        vpp = [dual(rpp[s]) for s=1:lar*anc]
+        pp = zeros(lar,anc)
+        for j=1:anc
+            pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
         end
-    end
 
-    return pii,pp,pc,p1,p2
+        p1 = zeros(T)
+        p2 = 0
+        for i=1:lar*anc
+            if i in Z #hay que ver como solucionarlo
+                if value(q[i]) == 0
+                    p1[:] = [dual(rp1[i,t]) for t=1:T]
+                    p2 = dual(rp2[i])
+                end
+            end
+        end
+
+        return pii,pp,pc,p1,p2
+    else
+        zz = []
+        vv = []
+        su = []
+        for z in Z
+            if (value(q[z])>0)
+                zz = [zz;z]
+                vv = [vv;value(q[z])]
+                su = [su;sum(C[z,:])]
+            end
+        end
+        return sort(DataFrame(z=zz,val=vv,sum=su),(:val,:sum),rev=true)
+    end
 end
 
-function FPME(Col)
+function FPME(Col=C)
     Q, = size(Col)
     global PME = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
     global q_pe = @variable(PME, q[1:Q], Bin)
@@ -100,6 +130,25 @@ function FPME(Col)
     @constraint(PME,sum(q) <= L)
     @constraint(PME,sum(((sum(Col[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=1:Q) <= vt*(lar*anc)*(1-a))
     @constraint(PME,[s=1:lar*anc],sum(Col[z,s]*q[z] for z=1:Q) == 1)
+
+    optimize!(PME)
+
+    return round(objective_value(PME))
+end
+
+function FPMsE(Z=1:Q)
+    Ay = Ady(Z)
+    global PME = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
+    global q_pe = @variable(PME, q[Z] == 1)
+    global y_pe = @variable(PME, y[Z,I,1:T], Bin)
+
+    @objective(PME, Max, sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
+
+    @constraint(PME,[f=1:fam-1,a in Ay,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
+    @constraint(PME,[k=Z,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
+
+    @constraint(PME,[k=Z,t=1:T],sum(y[k,:,t])-q[k] == 0)
+    @constraint(PME,[k=Z], sum(y[k,esp,:])-q[k] == 0)
 
     optimize!(PME)
 
@@ -254,7 +303,7 @@ function agregarz_0(x, Col=0)
         Zonas(1)
         Rendimientos(1)
         Adyacencia(1)
-        global vectz = FPMZ(C)
+        global vectz = FPMZ()
     end
 end
 
@@ -331,7 +380,7 @@ function agregar_0(x, Col=0)
         Zonas(1)
         Rendimientos(1)
         Adyacencia(1)
-        global vect = FPM(C)
+        global vect = FPM()
     end
 end
 
@@ -378,10 +427,10 @@ function CG_0()
     global Columnas = [(dim,H,W,i:i+H-1,j:j+W-1) for dim in Dimensiones for H=lar:-1:1 for W=anc:-1:1
     if dim==H*W for i=1:lar-H+1 for j=1:anc-W+1]
 
-    global vectz = FPMZ(C)
+    global vectz = FPMZ()
     FPMEZ(C)
     CGZ_0()
-    global vect = FPM(C)
+    global vect = FPM()
 
     flag = true
     while flag

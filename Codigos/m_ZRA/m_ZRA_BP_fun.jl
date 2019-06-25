@@ -11,7 +11,7 @@ mutable struct Nodo
 end
 
 function ZFija(Z::Array{Int16,1},fijas::Array{Int16,1} = [0], infac::Array{Int16,1} = [0])
-    Cand = FPM(Z,1)[:z]
+    Cand = FPM(Z,Ady(Z),1)[:z]
     for z=1:length(Cand)-1
         if (~(Cand[z] in fijas))&(~(Cand[z] in infac))
             return Cand[z]
@@ -19,15 +19,6 @@ function ZFija(Z::Array{Int16,1},fijas::Array{Int16,1} = [0], infac::Array{Int16
     end
     return ""
 end
-
-function particionBP(Lista)
-   Matriz = zeros(lar,anc)
-   for i in Lista
-      Matriz = Matriz + i*zonas[i]
-   end
-   return floor.(Int,Matriz)
-end
-
 
 function agregarBP_0(x, Col)
     q_s = round.(x[1,1:anc])
@@ -46,6 +37,8 @@ function agregarBP_0(x, Col)
         global varianzas = [varianzas ; Vari(x)]
         filter!(x->x≠Col,Columnas)
         Zonas(1)
+        Rendimientos(1)
+        Adyacencia(1)
     end
 end
 
@@ -100,8 +93,18 @@ function act()
    end
 end
 
+function Ady(Z)
+    Ay = []
+    for (i,j) in A
+        if (i in Z)&(j in Z)
+            Ay = [Ay; (i,j)]
+        end
+    end
+    return Set(Ay)
+end
+
 function bnp(zfijas::Array{Int16,1},Z::Array{Int16,1})
-   vect = FPM(Z)
+   vect = FPM(Z,Ady(Z))
    X, Col = mejorcolBP_0(zfijas)
    if sum(X) > 1
        agregarBP_0(X,Col)
@@ -121,7 +124,7 @@ function esfactible(nod::Int64,mod = 0)
 end
 
 function Avanzar(padre::Int64 = numn)
-   if (minimum(FO[:,3]) < length(Nodos[padre].var_1))|(~esfactible(padre))
+   if (L < length(Nodos[padre].var_1))|(~esfactible(padre))
        flag = false
    elseif Nodos[padre].suc != []
        flag = false
@@ -134,11 +137,12 @@ function Avanzar(padre::Int64 = numn)
 
        cand = ZFija(Nodos[padre].Z,Nodos[padre].var_1,Nodos[padre].var_0)
 
-       if (cand == "")|(minimum(FO[:,3]) <= length(Nodos[padre].var_1))
+       if (cand == "")|(L <= length(Nodos[padre].var_1))
            flag = false
-           if (Nodos[padre].var_1 == Nodos[padre].Z)
+           if (Nodos[padre].var_1 == Nodos[padre].Z)&(~(Set(Nodos[padre].var_1) in soluciones))
                if esfactible(padre,1)&(string(termination_status(PM))== "OPTIMAL") #Hacer que sea factible
                    global Soluciones = [Soluciones;(arbol,padre,length(Nodos[padre].var_1),Nodos[padre].var_1)]
+                   global soluciones = [soluciones;Set(Nodos[padre].var_1)]
                    global FO = [FO; [arbol padre length(Nodos[padre].var_1)]]
                end
            end
@@ -188,13 +192,14 @@ function branching(nbus = 5,cbus = 5)
    end
 end
 
-function BnP(nbus = 5,cbus = 5)
+function BnP(niter = 5,nbus = 5,cbus = 5)
    Dimensiones = sort(unique([i*j for i=1:max(lar,anc) for j=1:min(lar,anc) if (i*j != 1)&(i*j != lar*anc)]),rev=true)
    global Columnas = [(dim,H,W,i:i+H-1,j:j+W-1) for dim in Dimensiones for H=lar:-1:1 for W=anc:-1:1
    if dim==H*W for i=1:lar-H+1 for j=1:anc-W+1]
 
    global Arboles = Dict()
    global Soluciones = []
+   global soluciones = []
    global FO = [1 1 lar*anc]
    global arbol = 0
 
@@ -204,7 +209,7 @@ function BnP(nbus = 5,cbus = 5)
       branching(nbus,cbus)
       global Arboles[arbol] = Nodos
       if arbol > 1
-         if length(Arboles[arbol]) == length(Arboles[arbol-1])
+         if (length(Arboles[arbol]) == length(Arboles[arbol-1]))|(arbol > niter)
             flag = false
          end
       end
