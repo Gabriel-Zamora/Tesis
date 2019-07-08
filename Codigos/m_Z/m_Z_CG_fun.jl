@@ -1,38 +1,30 @@
-using Statistics, JuMP, Gurobi, Plotly
-
 ###############################################################################
                     # FUNCIONES #
 ###############################################################################
-function FPM(Z=1:Q ,modo=0)
+function FPM(Z=1:Q,base=Any[])
     global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
     @variable(PM, q[Z] >= 0)
     @objective(PM, Min, sum(q))
     @constraint(PM,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z in Z) <= vt*(lar*anc)*(1-a))
     @constraint(PM,rpp[s=1:lar*anc],sum(C[z,s]*q[z] for z in Z) == 1)
 
+    if base != Any[]
+        set_start_value.(all_variables(PM), 0)
+
+        for i in base
+        set_start_value(q[i[1]],i[2])
+        end
+    end
+
     optimize!(PM)
 
-    if modo == 0
-        pii = dual(rpii)
-        vpp = [dual(rpp[s]) for s=1:lar*anc]
-        pp = zeros(lar,anc)
-        for j=1:anc
-            pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
-        end
-        return pii,pp
-    else
-        zz = [0]
-        vv = [0]
-        su = [0]
-        for z in Z
-            if (value(q[z])>0)
-                zz = [zz;z]
-                vv = [vv;value(q[z])]
-                su = [su;sum(C[z,:])]
-            end
-        end
-        return sort(DataFrame(z=zz,val=vv,sum=su),(:val,:sum),rev=true)
+    pii = dual(rpii)
+    vpp = [dual(rpp[s]) for s=1:lar*anc]
+    pp = zeros(lar,anc)
+    for j=1:anc
+        pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
     end
+    return pii,pp
 end
 
 function FPME(Col)
@@ -146,7 +138,7 @@ function agregar_0(x, Col)
         global Q += 1
         global C = [C; q_s']
         global varianzas = [varianzas ; Vari(x)]
-        global vect = FPM()
+        global vect = FPM(1:Q,[(z,value(all_variables(PM)[z])) for z in 1:Q-1])
         filter!(x->x≠Col,Columnas)
         Zonas(1)
     end
@@ -200,6 +192,38 @@ function CG_0()
         q = Q
         cg_0()
         if q == Q
+            flag = false
+        end
+    end
+end
+
+function Zcg_0(niter = 1e6)
+    global columnas = Columnas
+    flag = true
+    iter = 0
+    while flag & (iter < niter)
+        iter += 1
+        q = Q
+        X, Col = mejorcolCG_0()
+        if sum(X) > 1
+            agregar_0(X, Col)
+            FPME(C)
+        end
+        if (q == Q)|(objective_value(PME)<L)
+            flag = false
+        end
+    end
+end
+
+function ZCG_0()
+    global Dimensiones = sort(unique([i*j for i=1:max(lar,anc) for j=1:min(lar,anc) if (i*j != 1)&(i*j != lar*anc)]),rev=true)
+    global Columnas = [(dim,H,W,i:i+H-1,j:j+W-1) for dim in Dimensiones for H=lar:-1:1 for W=anc:-1:1
+    if dim==H*W for i=1:lar-H+1 for j=1:anc-W+1]
+    flag = true
+    while flag
+        q = Q
+        Zcg_0()
+        if (q == Q)|(objective_value(PME)<L)
             flag = false
         end
     end

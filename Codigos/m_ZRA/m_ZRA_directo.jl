@@ -1,12 +1,8 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_*"Codigos/Instancias/ZRA16.jl")
+include(_ref_*"Codigos/m_ZRA/parametros.jl")
 include(_ref_*"Codigos/m_ZRA/m_ZRA_CG_fun.jl")
-using Statistics, JuMP, GLPK, Gurobi
-@time begin
-#Cantidad de cuarteles
-Q = sum(i for i=1:lar)*sum(j for j=1:anc)
-#Cuarteles
-C = zeros(Q,lar*anc)
+
+setparam!(gurobi_env, "NodefileStart", 0.5)
 
 # #Cantidad de cuarteles
 Q = sum(i for i=1:lar)*sum(j for j=1:anc)
@@ -50,36 +46,12 @@ for k=1:Q
         global vari = zeros(anc*lar)
 end
 
-#Matriz de rendimientos
-rendimientos = zeros(Q,esp)
-for k=1:Q
-    for i=1:esp
-        rendimientos[k,i] = sum(C[k,:])*rendimiento[i]
-    end
-end
-
-#Conjunto de Adyacencias
 zonas = Dict()
-for k=1:Q
-    zona = zeros(lar,anc)
-    for i=1:lar
-        zona[i,:] = C[k,(i-1)*anc+1:i*anc]
-    end
-    zonas[k] = zona
-end
-
-for k=1:Q for l=k:Q
-    Ady(k,l)
-end end
-
-
-#Parametros
-a = 0.5
-I = union(familias[1],familias[2],familias[3],familias[4])
-vt = var(muestras,corrected=false)
+Rendimientos()
+Zonas()
+Adyacencia()
 
 #Modelo
-# m = Model(with_optimizer(GLPK.Optimizer))
 m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
 
 @variable(m, q[1:Q], Bin)
@@ -100,9 +72,9 @@ m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
 
 optimize!(m)
 
-# println("")
-# println("Soluciones: ")
 println(objective_value(m))
+
+
 # println("")
 # for t=1:T
 #     Matriz = zeros(lar,anc)
@@ -122,13 +94,8 @@ println(objective_value(m))
 #     display(floor.(Int,Matriz))
 # end
 
-end
 
-#ZA
-# 2x2   0.01 segundos
-# 3x3   0.06 segundos
-# 4x4   0.26 segundos
-# 5x5   1.14 segundos
-# 6x6   7.92 segundos
-# 7x7  21.62 segundos
-# 8x8 102.20 segundos
+# li =  list_of_constraint_types(m)
+#
+# display(sum(num_constraints(m,li[i][1],li[i][2]) for i=1:length(li)))
+#

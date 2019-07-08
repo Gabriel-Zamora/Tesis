@@ -1,11 +1,8 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_*"Codigos/Instancias/Z9.jl")
-using Statistics, JuMP, Gurobi
-@time begin
-#Cantidad de cuarteles
-Q = sum(i for i=1:lar)*sum(j for j=1:anc)
-#Cuarteles
-C = zeros(Q,lar*anc)
+include(_ref_*"Codigos/m_Z/parametros.jl")
+include(_ref_*"Codigos/Instancias/Z36.jl")
+
+setparam!(gurobi_env, "NodefileStart", 0.5)
 
 # #Cantidad de cuarteles
 Q = sum(i for i=1:lar)*sum(j for j=1:anc)
@@ -49,10 +46,6 @@ for k=1:Q
         global vari = zeros(anc*lar)
 end
 
-#Parametros
-a = 0.5
-vt = var(muestras[i,j] for i=1:lar for j=1:anc if muestras[i,j]>0 corrected=false)
-
 #Modelo
 # m = Model(with_optimizer(GLPK.Optimizer))
 m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,gurobi_env,OutputFlag=0))
@@ -68,4 +61,3 @@ optimize!(m)
 
 @show objective_value(m)
 @show sum([ value(q[i]) for i in 1:Q ])
-end
