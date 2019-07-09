@@ -138,55 +138,44 @@ function esfactible(nod::Int64,mod = 0)
 end
 
 function Avanzar(padre::Int64 = numn)
-   if (maximum(FO[:,3])>Nodos[padre].VO)|(L<length(Nodos[padre].var_1))|(~esfactible(padre))
+    global NP = NP[NP.Nodo .!= padre,:]
+
+   bnp(padre)
+   cand = ZFija(padre,Nodos[padre].var_1,Nodos[padre].var_0)
+
+   if (cand == "")|(maximum(FO[:,3])>Nodos[padre].VO)|(L<length(Nodos[padre].var_1))
        flag = false
-   elseif Nodos[padre].suc != []
-       flag = false
-   else
-       flag = true
-   end
-
-   while flag
-       bnp(padre)
-
-       cand = ZFija(padre,Nodos[padre].var_1,Nodos[padre].var_0)
-
-       if (cand == "")|(maximum(FO[:,3])>Nodos[padre].VO)|(L<length(Nodos[padre].var_1))
-           flag = false
-           if (Nodos[padre].var_1 == Nodos[padre].Z)&(~(Set(Nodos[padre].var_1) in soluciones))
-               if esfactible(padre,1)&(string(termination_status(PM))== "OPTIMAL")&(maximum(FO[:,3])<FPMsE(Nodos[padre].Z))
-                   global Soluciones = [Soluciones;(arbol,padre,objective_value(PMsE),Nodos[padre].var_1)]
-                   global soluciones = [soluciones;Set(Nodos[padre].var_1)]
-                   global FO = [FO; [arbol padre Nodos[padre].VO]]
-               end
+       if (Nodos[padre].var_1 == Nodos[padre].Z)&(~(Set(Nodos[padre].var_1) in soluciones))
+           if esfactible(padre,1)&(string(termination_status(PM))== "OPTIMAL")&(maximum(FO[:,3])<FPMsE(Nodos[padre].Z))
+               global Soluciones = [Soluciones;(arbol,padre,objective_value(PMsE),Nodos[padre].var_1)]
+               global soluciones = [soluciones;Set(Nodos[padre].var_1)]
+               global FO = [FO; [arbol padre objective_value(PMsE)]]
            end
-       else
-           global numn += 1
-           global Nodos[padre].suc = [Nodos[padre].suc;numn]
-           global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[],[cand],1:Q,-objective_value(PM),[],[])]
-           global Nodos[numn].var_1 = Nodos[padre].var_1
-           global Nodos[numn].var_0 = [Nodos[padre].var_0;cand]
-           global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
-           global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
-           global Nodos[numn].VO = -objective_value(PM)
-           global Nodos[numn].base = MBase(numn)
-
-           global numn += 1
-           global Nodos[padre].suc = [Nodos[padre].suc;numn]
-           global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[cand],[],1:Q,-objective_value(PM),[],[])]
-           global Nodos[numn].var_1 = [cand;Nodos[padre].var_1]
-           global Nodos[numn].var_0 = Nodos[padre].var_0
-           global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
-           global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
-           global Nodos[numn].VO = -objective_value(PM)
-           global Nodos[numn].base = MBase(numn)
-
-           padre = numn
        end
+   else
+       global numn += 1
+       global Nodos[padre].suc = [Nodos[padre].suc;numn]
+       global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[],[cand],1:Q,-objective_value(PM),[],[])]
+       global Nodos[numn].var_1 = Nodos[padre].var_1
+       global Nodos[numn].var_0 = [Nodos[padre].var_0;cand]
+       global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
+       global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
+       global Nodos[numn].VO = -objective_value(PM)
+       global Nodos[numn].base = MBase(numn)
+       push!(NP,[numn Nodos[numn].VO length(Nodos[numn].var_1)])
 
-       if ~esfactible(padre)
-           flag = false
-       end
+       global numn += 1
+       global Nodos[padre].suc = [Nodos[padre].suc;numn]
+       global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[cand],[],1:Q,-objective_value(PM),[],[])]
+       global Nodos[numn].var_1 = [cand;Nodos[padre].var_1]
+       global Nodos[numn].var_0 = Nodos[padre].var_0
+       global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
+       global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
+       global Nodos[numn].VO = -objective_value(PM)
+       global Nodos[numn].base = MBase(numn)
+       push!(NP,[numn Nodos[numn].VO length(Nodos[numn].var_1)])
+
+       global NP = sort!(NP[NP.FO .>= maximum(FO[:,3]), :],(:FO,:NF),rev=true)
    end
 end
 
@@ -195,20 +184,14 @@ function branching()
    global numn = 1
    global Nodos = [Nodo(numn,[],[],[],[lar*anc+1],1:Q,-objective_value(PM),[],vect)]
    global Nodos[1].base = MBase(1)
-   Avanzar(1)
+   push!(NP,[1 Nodos[1].VO length(Nodos[1].var_1)])
 
-   Lista = []
    flag = true
    while flag
-      lista = [i for i=1:numn if (Nodos[i].VO >= maximum(FO[:,3]))&esfactible(i)&(Nodos[i].suc==[])&(Nodos[i].var_1 != Nodos[i].Z)]
-
-      if (length(lista)==0)|(lista == Lista)
+      if size(NP) == (0,3)
          flag = false
       else
-         Lista = lista
-         for i in lista
-            Avanzar(i)
-         end
+          Avanzar(NP[:Nodo][1])
       end
    end
 end
@@ -228,6 +211,7 @@ function BnP()
    maxi = 0
    while flag
       global arbol += 1
+      global NP = DataFrame(Nodo = Int64[], FO = Float64[], NF = Int16[])
       branching()
       global Arboles[arbol] = Nodos
       if maxi == maximum(FO[:,3])
@@ -235,7 +219,6 @@ function BnP()
           cg_0(lar+anc)
       end
       maxi = maximum(FO[:,3])
-      if arbol == 3 flag = false end
       if arbol > 1
          if length(Arboles[arbol]) == length(Arboles[arbol-1])
             flag = false
