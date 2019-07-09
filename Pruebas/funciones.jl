@@ -1,4 +1,4 @@
-using CSV
+using CSV, Statistics, JuMP, Gurobi, Plotly
 
 function parametros(n)
     param = open(_ref_*"Codigos/m_ZRA/parametros.jl")

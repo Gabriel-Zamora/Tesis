@@ -57,7 +57,7 @@ function NBase(padre::Int64)
                     base[i,2] = minimum((ones(lar,anc)-aux).*zonas[base[i,1]]+(ones(lar,anc)-zonas[base[i,1]]))+base[i,2]
                 end
             end
-            if aux != ones(lar,anc) ##NO VEO EL ERROR
+            if aux != ones(lar,anc)
                 for z in sort(Nodos[padre].Z,rev=true)
                     if maximum(aux.*zonas[z])<1
                         val = maximum((ones(lar,anc)-aux).*zonas[z])
@@ -160,7 +160,7 @@ end
 
 function bnp(padre::Int64)
     if esfactible(padre)
-       vect = FPM(Nodos[padre].Z,TBase(padre))
+       global vect = FPM(Nodos[padre].Z,TBase(padre))
        global Nodos[padre].VO = objective_value(PM)
        global Nodos[padre].base = MBase(padre)
        X, Col = mejorcolBP_0(Nodos[padre].var_1)

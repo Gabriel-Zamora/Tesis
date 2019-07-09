@@ -30,6 +30,55 @@ function MBase(padre::Int64)
     return [Dt[:z] Dt[:v]]
 end
 
+function NBase(padre::Int64)
+    base = [Nodos[padre].var_1 ones(length(Nodos[padre].var_1))]
+    for i=1:length(Nodos[Nodos[padre].pred[1]].base[:,1])
+        if Nodos[Nodos[padre].pred[1]].base[i,1] in setdiff(Nodos[padre].Z,Nodos[padre].var_1)
+            base = [base; Nodos[Nodos[padre].pred[1]].base[i,:]']
+        end
+    end
+
+    aux = zeros(lar,anc)
+    for i=1:length(base[:,1])
+        aux += zonas[base[i,1]]*base[i,2]
+    end
+
+    if aux != ones(lar,anc)
+        for z in sort(Nodos[padre].Z,rev=true)
+            if (sum(aux.*zonas[z])==0)&((sum(floor.(ones(lar,anc)-aux).*zonas[z])>0))
+                aux += zonas[z]
+                base = [base; [z;1]']
+            end
+        end
+        if aux != ones(lar,anc)
+            for i=1:length(base[:,1])
+                if (minimum((ones(lar,anc)-aux).*zonas[base[i,1]]+(ones(lar,anc)-zonas[base[i,1]])) + base[i,2] == 1)&
+                    (sum((ones(lar,anc)-aux).*zonas[base[i,1]])!=0)
+                    base[i,2] = minimum((ones(lar,anc)-aux).*zonas[base[i,1]]+(ones(lar,anc)-zonas[base[i,1]]))+base[i,2]
+                end
+            end
+            if aux != ones(lar,anc)
+                for z in sort(Nodos[padre].Z,rev=true)
+                    if maximum(aux.*zonas[z])<1
+                        val = maximum((ones(lar,anc)-aux).*zonas[z])
+                        base = [base; [z;val]']
+                        aux += zonas[z]*val
+                    end
+                end
+            end
+        end
+    end
+    return base
+end
+
+function TBase(padre::Int64)
+    base = []
+    for i=1:length(Nodos[padre].base[:,1])
+        base = [base; (Nodos[padre].base[i,1],Nodos[padre].base[i,2])]
+    end
+    return base
+end
+
 function agregarBP_0(x, Col)
     q_s = round.(x[1,1:anc])
     for j=2:lar
@@ -115,7 +164,7 @@ end
 
 function bnp(padre::Int64) #Falta entregar info
     if esfactible(padre)
-       vect = FPM(Nodos[padre].Z,Ady(Nodos[padre].Z))
+       global vect = FPM(Nodos[padre].Z,Ady(Nodos[padre].Z),TBase(padre))
        global Nodos[padre].VO = -objective_value(PM)
        global Nodos[padre].base = MBase(padre)
        X, Col = mejorcolBP_0(Nodos[padre].var_1)
@@ -138,7 +187,7 @@ function esfactible(nod::Int64,mod = 0)
    end
 end
 
-function Avanzar(padre::Int64 = numn) #Falta relacionado a base
+function Avanzar(padre::Int64 = numn)
    if (maximum(FO[:,3])>Nodos[padre].VO)|(L<length(Nodos[padre].var_1))|(~esfactible(padre))
        flag = false
    elseif Nodos[padre].suc != []
@@ -168,7 +217,7 @@ function Avanzar(padre::Int64 = numn) #Falta relacionado a base
            global Nodos[numn].var_1 = Nodos[padre].var_1
            global Nodos[numn].var_0 = [Nodos[padre].var_0;cand]
            global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
-           # global Nodos[numn].base = NBase(numn)
+           global Nodos[numn].base = NBase(numn)
 
            global numn += 1
            global Nodos[padre].suc = [Nodos[padre].suc;numn]
@@ -176,7 +225,7 @@ function Avanzar(padre::Int64 = numn) #Falta relacionado a base
            global Nodos[numn].var_1 = [cand;Nodos[padre].var_1]
            global Nodos[numn].var_0 = Nodos[padre].var_0
            global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
-           # global Nodos[numn].base = NBase(numn)
+           global Nodos[numn].base = NBase(numn)
 
            padre = numn
        end
