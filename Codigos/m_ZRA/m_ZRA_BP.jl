@@ -20,9 +20,6 @@ Zonas()
 Rendimientos()
 Adyacencia()
 
-@time begin
 BnP()
-end
 
-# display(Soluciones)
-# FPMsE(Arboles[1][51].Z)
+display(Soluciones)

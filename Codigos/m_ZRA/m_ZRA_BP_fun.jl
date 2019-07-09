@@ -10,6 +10,7 @@ mutable struct Nodo
    Z::Array{Int16,1}
    VO::Float64
    base
+   vect
 end
 
 function ZFija(padre::Int64,fijas::Array{Int16,1} = [0], infac::Array{Int16,1} = [0])
@@ -28,55 +29,6 @@ function MBase(padre::Int64)
     Dt = DataFrame(z = Nodos[padre].Z,v = value.(all_variables(PM)[1:length(Nodos[padre].Z)]),sum = [sum(zonas[z]) for z in Nodos[padre].Z])
     Dt = sort(Dt[Dt.v .> 0, :],(:v,:sum),rev=true)
     return [Dt[:z] Dt[:v]]
-end
-
-function NBase(padre::Int64)
-    base = [Nodos[padre].var_1 ones(length(Nodos[padre].var_1))]
-    for i=1:length(Nodos[Nodos[padre].pred[1]].base[:,1])
-        if Nodos[Nodos[padre].pred[1]].base[i,1] in setdiff(Nodos[padre].Z,Nodos[padre].var_1)
-            base = [base; Nodos[Nodos[padre].pred[1]].base[i,:]']
-        end
-    end
-
-    aux = zeros(lar,anc)
-    for i=1:length(base[:,1])
-        aux += zonas[base[i,1]]*base[i,2]
-    end
-
-    if aux != ones(lar,anc)
-        for z in sort(Nodos[padre].Z,rev=true)
-            if (sum(aux.*zonas[z])==0)&((sum(floor.(ones(lar,anc)-aux).*zonas[z])>0))
-                aux += zonas[z]
-                base = [base; [z;1]']
-            end
-        end
-        if aux != ones(lar,anc)
-            for i=1:length(base[:,1])
-                if (minimum((ones(lar,anc)-aux).*zonas[base[i,1]]+(ones(lar,anc)-zonas[base[i,1]])) + base[i,2] == 1)&
-                    (sum((ones(lar,anc)-aux).*zonas[base[i,1]])!=0)
-                    base[i,2] = minimum((ones(lar,anc)-aux).*zonas[base[i,1]]+(ones(lar,anc)-zonas[base[i,1]]))+base[i,2]
-                end
-            end
-            if aux != ones(lar,anc)
-                for z in sort(Nodos[padre].Z,rev=true)
-                    if maximum(aux.*zonas[z])<1
-                        val = maximum((ones(lar,anc)-aux).*zonas[z])
-                        base = [base; [z;val]']
-                        aux += zonas[z]*val
-                    end
-                end
-            end
-        end
-    end
-    return base
-end
-
-function TBase(padre::Int64)
-    base = []
-    for i=1:length(Nodos[padre].base[:,1])
-        base = [base; (Nodos[padre].base[i,1],Nodos[padre].base[i,2])]
-    end
-    return base
 end
 
 function agregarBP_0(x, Col)
@@ -162,12 +114,10 @@ function Ady(Z)
     return Set(Ay)
 end
 
-function bnp(padre::Int64) #Falta entregar info
+function bnp(padre::Int64)
     if esfactible(padre)
-       global vect = FPM(Nodos[padre].Z,Ady(Nodos[padre].Z),TBase(padre))
-       global Nodos[padre].VO = -objective_value(PM)
-       global Nodos[padre].base = MBase(padre)
-       X, Col = mejorcolBP_0(Nodos[padre].var_1)
+        global vect = Nodos[padre].vect
+        X, Col = mejorcolBP_0(Nodos[padre].var_1)
        if sum(X) > 1
            agregarBP_0(X,Col)
            act()
@@ -213,19 +163,23 @@ function Avanzar(padre::Int64 = numn)
        else
            global numn += 1
            global Nodos[padre].suc = [Nodos[padre].suc;numn]
-           global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[],[cand],1:Q,-objective_value(PM),[])]
+           global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[],[cand],1:Q,-objective_value(PM),[],[])]
            global Nodos[numn].var_1 = Nodos[padre].var_1
            global Nodos[numn].var_0 = [Nodos[padre].var_0;cand]
            global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
-           global Nodos[numn].base = NBase(numn)
+           global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
+           global Nodos[numn].VO = -objective_value(PM)
+           global Nodos[numn].base = MBase(numn)
 
            global numn += 1
            global Nodos[padre].suc = [Nodos[padre].suc;numn]
-           global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[cand],[],1:Q,-objective_value(PM),[])]
+           global Nodos = [Nodos;Nodo(numn,[padre;Nodos[padre].pred],[],[cand],[],1:Q,-objective_value(PM),[],[])]
            global Nodos[numn].var_1 = [cand;Nodos[padre].var_1]
            global Nodos[numn].var_0 = Nodos[padre].var_0
            global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
-           global Nodos[numn].base = NBase(numn)
+           global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
+           global Nodos[numn].VO = -objective_value(PM)
+           global Nodos[numn].base = MBase(numn)
 
            padre = numn
        end
@@ -239,7 +193,8 @@ end
 function branching()
    global vect = FPM()
    global numn = 1
-   global Nodos = [Nodo(numn,[],[],[],[lar*anc+1],1:Q,-objective_value(PM),[])]
+   global Nodos = [Nodo(numn,[],[],[],[lar*anc+1],1:Q,-objective_value(PM),[],vect)]
+   global Nodos[1].base = MBase(1)
    Avanzar(1)
 
    Lista = []
@@ -280,7 +235,7 @@ function BnP()
           cg_0(lar+anc)
       end
       maxi = maximum(FO[:,3])
-      if arbol == 5 flag = false end
+      if arbol == 3 flag = false end
       if arbol > 1
          if length(Arboles[arbol]) == length(Arboles[arbol-1])
             flag = false
