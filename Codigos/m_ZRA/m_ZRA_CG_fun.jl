@@ -71,7 +71,7 @@ function FPME(Col=C)
 
     optimize!(PME)
 
-    return round(objective_value(PME))
+    return objective_value(PME)
 end
 
 function FPMsE(Z=1:Q)
@@ -90,7 +90,7 @@ function FPMsE(Z=1:Q)
 
     optimize!(PMsE)
 
-    return round(objective_value(PMsE))
+    return objective_value(PMsE)
 end
 
 function fSP(vect,X)

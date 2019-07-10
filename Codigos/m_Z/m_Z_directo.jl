@@ -1,6 +1,5 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
 include(_ref_*"Codigos/m_Z/parametros.jl")
-include(_ref_*"Codigos/Instancias/Z36.jl")
 
 setparam!(gurobi_env, "NodefileStart", 0.5)
 
@@ -59,5 +58,4 @@ m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,gurobi_env,OutputFlag=0))
 
 optimize!(m)
 
-@show objective_value(m)
-@show sum([ value(q[i]) for i in 1:Q ])
+println(objective_value(m))

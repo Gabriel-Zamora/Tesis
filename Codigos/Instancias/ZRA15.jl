@@ -1,10 +1,10 @@
 include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
 include(_ref_*"Codigos/Instancias/Datos_GA2018.jl")
 
-lar = 5     #6
+lar = 3     #6
 anc = 5     #7
 
-L = 10
+L = 6
 
 #Interpolación
 using Interpolations

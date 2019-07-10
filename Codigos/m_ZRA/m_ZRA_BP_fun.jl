@@ -2,18 +2,18 @@
                     # Branch & Price #
 ###############################################################################
 mutable struct Nodo
-   ind::Int16
-   pred::Array{Int16,1}
-   suc::Array{Int16,1}
-   var_1::Array{Int16,1}
-   var_0::Array{Int16,1}
-   Z::Array{Int16,1}
+   ind::Int64
+   pred::Array{Int64,1}
+   suc::Array{Int64,1}
+   var_1::Array{Int64,1}
+   var_0::Array{Int64,1}
+   Z::Array{Int64,1}
    VO::Float64
    base
    vect
 end
 
-function ZFija(padre::Int64,fijas::Array{Int16,1} = [0], infac::Array{Int16,1} = [0])
+function ZFija(padre::Int64,fijas::Array{Int64,1} = [0], infac::Array{Int64,1} = [0])
     if Nodos[padre].base != Any[]
         Cand = Nodos[padre].base[:,1]
         for z=1:length(Cand)-1
@@ -53,7 +53,7 @@ function agregarBP_0(x, Col)
     end
 end
 
-function mejorcolBP_0(zfijas::Array{Int16,1},columnas = Columnas)
+function mejorcolBP_0(zfijas::Array{Int64,1},columnas = Columnas)
     xo = zeros(lar,anc)
     fo = 0
     col = 0
@@ -79,7 +79,7 @@ function mejorcolBP_0(zfijas::Array{Int16,1},columnas = Columnas)
     return xo, col
 end
 
-function ConjZonas(zfijas::Array{Int16,1},znulas::Array{Int16,1})
+function ConjZonas(zfijas::Array{Int64,1},znulas::Array{Int64,1})
    prueba = [true for i=1:Q]
    for i in zfijas
        for z=1:Q
@@ -122,6 +122,10 @@ function bnp(padre::Int64)
            agregarBP_0(X,Col)
            act()
        end
+
+      FPM(Nodos[padre].Z,Ady(Nodos[padre].Z))
+      global Nodos[padre].base = MBase(padre)
+
    else
        global Nodos[padre].base = Any[]
    end
@@ -150,6 +154,7 @@ function Avanzar(padre::Int64 = numn)
                global Soluciones = [Soluciones;(arbol,padre,objective_value(PMsE),Nodos[padre].var_1)]
                global soluciones = [soluciones;Set(Nodos[padre].var_1)]
                global FO = [FO; [arbol padre objective_value(PMsE)]]
+               global NP = sort!(NP[NP.FO .>= maximum(FO[:,3]), :],(:FO,:NF),rev=true)
            end
        end
    else
@@ -188,7 +193,7 @@ function branching()
 
    flag = true
    while flag
-      if size(NP) == (0,3)
+      if (size(NP) == (0,3))|(numn > sum(i for i=1:anc)*sum(i for i=1:lar)*L)
          flag = false
       else
           Avanzar(NP[:Nodo][1])
@@ -211,7 +216,7 @@ function BnP()
    maxi = 0
    while flag
       global arbol += 1
-      global NP = DataFrame(Nodo = Int64[], FO = Float64[], NF = Int16[])
+      global NP = DataFrame(Nodo = Int64[], FO = Float64[], NF = Int64[])
       branching()
       global Arboles[arbol] = Nodos
       if maxi == maximum(FO[:,3])
@@ -219,8 +224,9 @@ function BnP()
           cg_0(lar+anc)
       end
       maxi = maximum(FO[:,3])
+      if arbol == 3 end
       if arbol > 1
-         if length(Arboles[arbol]) == length(Arboles[arbol-1])
+         if length(Arboles[arbol])==length(Arboles[arbol-1])
             flag = false
          end
       end
