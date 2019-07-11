@@ -193,7 +193,7 @@ function branching()
 
    flag = true
    while flag
-      if (size(NP) == (0,3))|(numn > sum(i for i=1:anc)*sum(i for i=1:lar)*L)
+      if (size(NP) == (0,3))|(numn > 10000)#sum(i for i=1:anc)*sum(i for i=1:lar)*L*6)
          flag = false
       else
           Avanzar(NP[:Nodo][1])
@@ -223,10 +223,12 @@ function BnP()
           FPM(1:Q)
           cg_0(lar+anc)
       end
+      display(arbol)
+      display(Soluciones)
       maxi = maximum(FO[:,3])
-      if arbol == 3 end
+      if arbol == 10 flag = false end
       if arbol > 1
-         if length(Arboles[arbol])==length(Arboles[arbol-1])
+         if false# length(Arboles[arbol])==length(Arboles[arbol-1])
             flag = false
          end
       end

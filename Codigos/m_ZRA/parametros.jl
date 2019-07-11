@@ -1,5 +1,5 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_*"Codigos/Instancias/ZRA30.jl")
+include(_ref_*"Codigos/Instancias/ZRA40.jl")
 using Statistics, JuMP, Gurobi, Plotly
 gurobi_env = Gurobi.Env();
 
