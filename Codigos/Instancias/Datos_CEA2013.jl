@@ -6,7 +6,7 @@ muestras = zeros(6,7)
 for j=1:7
     for i=1:6
         if i+(j-1)*6 <= 40
-            muestras[i,j] = datos[:OM][(j-1)*6+i]
+            muestras[i,j] = datos[:,:OM][(j-1)*6+i]
         end
     end
 end

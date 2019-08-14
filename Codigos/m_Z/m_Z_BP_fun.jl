@@ -28,7 +28,7 @@ end
 function MBase(padre::Int64)
     Dt = DataFrame(z = Nodos[padre].Z,v = value.(all_variables(PM)),sum = [sum(zonas[z]) for z in Nodos[padre].Z])
     Dt = sort(Dt[Dt.v .> 0, :],(:v,:sum),rev=true)
-    return [Dt[:z] Dt[:v]]
+    return [Dt[:,:z] Dt[:,:v]]
 end
 
 function particionBP(Lista)
@@ -210,7 +210,7 @@ function branching()
       if size(NP) == (0,3)
          flag = false
       else
-          Avanzar(NP[:Nodo][1])
+          Avanzar(NP[:,:Nodo][1])
       end
    end
 end
@@ -259,7 +259,7 @@ function Zbranching()
       if (size(NP) == (0,3))|(minimum(FO[:,3])<L)
          flag = false
       else
-          Avanzar(NP[:Nodo][1])
+          Avanzar(NP[:,:Nodo][1])
       end
    end
 end

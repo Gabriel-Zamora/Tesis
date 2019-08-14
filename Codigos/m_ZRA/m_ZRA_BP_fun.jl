@@ -28,7 +28,7 @@ end
 function MBase(padre::Int64)
     Dt = DataFrame(z = Nodos[padre].Z,v = value.(all_variables(PM)[1:length(Nodos[padre].Z)]),sum = [sum(zonas[z]) for z in Nodos[padre].Z])
     Dt = sort(Dt[Dt.v .> 0, :],(:v,:sum),rev=true)
-    return [Dt[:z] Dt[:v]]
+    return [Dt[:,:z] Dt[:,:v]]
 end
 
 function agregarBP_0(x, Col)
@@ -196,7 +196,7 @@ function branching()
       if (size(NP) == (0,3))|(numn > 10000)#sum(i for i=1:anc)*sum(i for i=1:lar)*L*6)
          flag = false
       else
-          Avanzar(NP[:Nodo][1])
+          Avanzar(NP[:,:Nodo][1])
       end
    end
 end
