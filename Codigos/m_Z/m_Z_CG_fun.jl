@@ -21,8 +21,8 @@ function FPM(Z=1:Q,base=Any[])
     pii = dual(rpii)
     vpp = [dual(rpp[s]) for s=1:lar*anc]
     pp = zeros(lar,anc)
-    for j=1:anc
-        pp[1:lar,j] = vpp[1+lar*(j-1):lar+lar*(j-1)]
+    for i=1:lar
+        pp[i,1:anc] = vpp[1+anc*(i-1):anc+anc*(i-1)]
     end
     return pii,pp
 end
@@ -159,8 +159,6 @@ function mejorcolCG_0()
                 fo = f
                 col = Col
             end
-        elseif f > 0
-            global columnas = filter(x->x≠Col,columnas)
         end
     end
     return xo, col
@@ -207,8 +205,8 @@ function Zcg_0(niter = 1e6)
         X, Col = mejorcolCG_0()
         if sum(X) > 1
             agregar_0(X, Col)
-            FPME(C)
         end
+        FPME(C)
         if (q == Q)|(objective_value(PME)<L)
             flag = false
         end

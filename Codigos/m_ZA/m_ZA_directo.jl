@@ -1,6 +1,6 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_*"Codigos/m_ZRA/parametros.jl")
-include(_ref_*"Codigos/m_ZRA/m_ZRA_CG_fun.jl")
+include(_ref_*"Codigos/m_ZA/parametros.jl")
+include(_ref_*"Codigos/m_ZA/m_ZA_CG_fun.jl")
 
 setparam!(gurobi_env, "NodefileStart", 0.5)
 
@@ -41,47 +41,18 @@ for k=1:Q varianzas[k] = Vari(zonas[k]) end
 m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
 
 @variable(m, q[1:Q], Bin)
-@variable(m, y[1:Q,I,1:T], Bin)
+@variable(m, y[1:Q,I], Bin)
 
-@objective(m, Max, sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in 1:Q))
+@objective(m, Max, sum(precio[i]*rendimientos[k,i]*y[k,i] for i in I for k in 1:Q))
 
 @constraint(m, (1-a)*vt*(lar*anc-sum(q)) >= sum((sum(C[k,:])-1)*varianzas[k]*sum(q[k]) for k=1:Q))
 @constraint(m,[j=1:lar*anc],sum(C[k,j]*sum(q[k]) for k=1:Q) == 1)
 @constraint(m, sum(q) <= L)
 
-@constraint(m,[k=1:Q,t=1:T], sum(y[k,:,t]) == q[k])
+@constraint(m,[k=1:Q], sum(y[k,:]) == q[k])
 
-@constraint(m,[k=1:Q,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
-@constraint(m,[k=1:Q], sum(y[k,esp,:]) == q[k])
-
-@constraint(m,[f=1:fam-1,a in A,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
+@constraint(m,[f=1:fam-1,a in A], sum(y[k,i] for i in familias[f] for k in a) <= 1)
 
 optimize!(m)
 
 println(objective_value(m))
-
-
-# println("")
-# for t=1:T
-#     Matriz = zeros(lar,anc)
-#     for k=1:Q
-#         if value(q[k])>0
-#             for i in I
-#                 if value(y[k,i,t])>0
-#                     for f=1:fam
-#                         if i in familias[f]
-#                             Matriz = Matriz + f*zonas[k]
-#                         end
-#                     end
-#                 end
-#             end
-#         end
-#     end
-#     display(floor.(Int,Matriz))
-# end
-
-
-# li =  list_of_constraint_types(m)
-#
-# display(sum(num_constraints(m,li[i][1],li[i][2]) for i=1:length(li)))
-#

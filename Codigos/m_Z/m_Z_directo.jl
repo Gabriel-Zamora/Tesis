@@ -1,4 +1,5 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
+include(_ref_*"Codigos/m_Z/m_Z_CG_fun.jl")
 include(_ref_ * "Codigos/m_Z/parametros.jl")
 
 setparam!(gurobi_env, "NodefileStart", 0.5)
@@ -35,16 +36,11 @@ for j = 2:anc
     global muest = [muest; muestras[:, j]]
 end
 
+zonas = Dict()
+Zonas()
 varianzas = zeros(Q)
-vari = zeros(Q)
-for k = 1:Q
-    global vari = muest .* C[k, :]
-    if sum(C[k, :]) > 1
-        varianzas[k] = var(vari[i] for i = 1:anc*lar if vari[i] > 0corrected =
-            false)
-    end
-    global vari = zeros(anc * lar)
-end
+for k=1:Q varianzas[k] = Vari(zonas[k]) end
+
 
 #Modelo
 # m = Model(with_optimizer(GLPK.Optimizer))
@@ -59,11 +55,8 @@ m = Model(with_optimizer(
 
 @objective(m, Min, sum(q))
 
-@constraint(
-    m,
-    (1 - a) * vt * (lar * anc - sum(q)) >= sum((sum(C[i, :]) - 1) *
-                                               varianzas[i] * q[i] for i = 1:Q)
-)
+@constraint( m, (1 - a) * vt * (lar * anc - sum(q)) >= sum((sum(C[i, :]) - 1) *
+            varianzas[i] * q[i] for i = 1:Q))
 @constraint(m, [j = 1:lar*anc], sum(C[i, j] * q[i] for i = 1:Q) == 1)
 
 optimize!(m)

@@ -223,8 +223,6 @@ function BnP()
           FPM(1:Q)
           cg_0(lar+anc)
       end
-      display(arbol)
-      display(Soluciones)
       maxi = maximum(FO[:,3])
       if arbol == 10 flag = false end
       if arbol > 1

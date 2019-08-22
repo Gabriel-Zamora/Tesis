@@ -5,15 +5,13 @@ function FPM(Z=1:Q,Ay=A,base=Any[])
     global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
 
     @variable(PM, q[Z] >= 0)
-    @variable(PM, y[Z,I,1:T] >= 0)
+    @variable(PM, y[Z,I] >= 0)
 
-    @objective(PM, Min, -sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
+    @objective(PM, Min, -sum(precio[i]*rendimientos[k,i]*y[k,i] for i in I for k in Z))
 
-    @constraint(PM,[f=1:fam-1,a in Ay,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
-    @constraint(PM,[k=Z,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
+    @constraint(PM,[f=1:fam-1,a in Ay], sum(y[k,i] for i in familias[f] for k in a) <= 1)
 
-    @constraint(PM,rp1[k=Z,t=1:T],sum(y[k,:,t])-q[k] == 0)
-    @constraint(PM,rp2[k=Z], sum(y[k,esp,:])-q[k] == 0)
+    @constraint(PM,rp[k=Z],sum(y[k,:])-q[k] == 0)
 
     @constraint(PM,rpc,sum(q) <= L)
     @constraint(PM,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=Z) <= vt*(lar*anc)*(1-a))
@@ -28,6 +26,15 @@ function FPM(Z=1:Q,Ay=A,base=Any[])
     end
 
     optimize!(PM)
+
+    global cA = [[] []]
+    for z in Z
+        for f=1:fam-1
+            if sum(value(y[z,i]) for i=familias[f]) == 1
+                global cA = [cA;z f]
+            end
+        end
+    end
 
     pii = dual(rpii)
     pc = dual(rpc)
@@ -44,15 +51,13 @@ function FPME(Col=C)
     Q, = size(Col)
     global PME = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
     @variable(PME, q[1:Q], Bin)
-    @variable(PME, y[1:Q,I,1:T], Bin)
+    @variable(PME, y[1:Q,I], Bin)
 
-    @objective(PME, Max, sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in 1:Q))
+    @objective(PME, Max, sum(precio[i]*rendimientos[k,i]*y[k,i] for i in I for k in 1:Q))
 
-    @constraint(PME,[f=1:fam-1,a in A,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
-    @constraint(PME,[k=1:Q,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
+    @constraint(PME,[f=1:fam-1,a in A], sum(y[k,i] for i in familias[f] for k in a) <= 1)
 
-    @constraint(PME,[k=1:Q,t=1:T],sum(y[k,:,t])-q[k] == 0)
-    @constraint(PME,[k=1:Q], sum(y[k,esp,:])-q[k] == 0)
+    @constraint(PME,[k=1:Q],sum(y[k,:])-q[k] == 0)
 
     @constraint(PME,sum(q) <= L)
     @constraint(PME,sum(((sum(Col[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=1:Q) <= vt*(lar*anc)*(1-a))
@@ -67,15 +72,13 @@ function FPMsE(Z=1:Q)
     Ay = Ady(Z)
     global PMsE = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
     @variable(PMsE, q[Z] == 1)
-    @variable(PMsE, y[Z,I,1:T], Bin)
+    @variable(PMsE, y[Z,I], Bin)
 
-    @objective(PMsE, Max, sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
+    @objective(PMsE, Max, sum(precio[i]*rendimientos[k,i]*y[k,i] for i in I for k in Z))
 
-    @constraint(PMsE,[f=1:fam-1,a in Ay,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
-    @constraint(PMsE,[k=Z,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
+    @constraint(PMsE,[f=1:fam-1,a in Ay], sum(y[k,i] for i in familias[f] for k in a) <= 1)
 
-    @constraint(PMsE,[k=Z,t=1:T],sum(y[k,:,t])-q[k] == 0)
-    @constraint(PMsE,[k=Z], sum(y[k,esp,:])-q[k] == 0)
+    @constraint(PMsE,[k=Z],sum(y[k,:])-q[k] == 0)
 
     optimize!(PMsE)
 
@@ -91,14 +94,11 @@ end
 
 function FsRA(X)
     sRA = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
-    @variable(sRA, y[I,1:T], Bin)
+    global y = @variable(sRA, y[I], Bin)
 
-    @objective(sRA, Min, -sum(precio[i]*rendimiento[i]*sum(X)*y[i,t] for t=1:T for i in I))
+    @objective(sRA, Min, -sum(precio[i]*rendimiento[i]*sum(X)*y[i] for i in I))
 
-    @constraint(sRA,[t=2:T,f=1:fam-1], sum(y[i,τ] for i in familias[f] for τ=t-1:t) <= 1)
-
-    @constraint(sRA,[t=1:T], sum(y[:,t]) == 1)
-    @constraint(sRA, sum(y[esp,:]) == 1)
+    @constraint(sRA, sum(y) == 1)
 
     optimize!(sRA)
 
@@ -170,55 +170,6 @@ function probar(x)
         end
     end
     return prueba
-end
-
-function particion()
-    for t=1:T
-        Matriz = zeros(lar,anc)
-        for k=1:Q
-            if value(q_pe[k])>0
-                for i in I
-                    if value(y_pe[k,i,t])>0
-                        for f=1:fam
-                            if i in familias[f]
-                                Matriz = Matriz + f*zonas[k]
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        display(floor.(Int,Matriz))
-    end
-end
-
-function mapear(t)  #Falta agregar titulos
-   Matriz = zeros(lar,anc)
-   iter = 0
-   areas = Dict()
-   for k=1:Q
-       if value(q_pe[k])>0
-           for i in I
-               if value(y_pe[k,i,t])>0
-                   for f=1:fam
-                       if i in familias[f]
-                           Matriz = Matriz + (f-1)*zonas[k]
-                       end
-                   end
-               end
-           end
-       end
-   end
-
-   mapa = heatmap(
-       x=["Z"*string(i) for i=1:lar],
-       y=["Z"*string(i) for i=1:anc],
-       z=Matriz,
-       title = "Hola")
-
-   layout = Layout(;title = "Periodo "*string(t))
-
-   plot(mapa, layout)
 end
 
 ###############################################################################
