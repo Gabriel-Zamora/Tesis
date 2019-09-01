@@ -86,7 +86,9 @@ function fSP(vect,X)
     pii = vect[1]
     pp = vect[2]
     pc = vect[3]
-    return FsRA(X) - sum(pp[i,j]*X[i,j] for i=1:lar for j=1:anc) - pii*((sum(X)-1)*Vari(X)+(1-a)*vt) - pc
+
+    Rq = - sum(pp[i,j]*X[i,j] for i=1:lar for j=1:anc) - pii*((sum(X)-1)*Vari(X)+(1-a)*vt) - pc
+    return FsRA(X) + Rq
 end
 
 function FsRA(X)

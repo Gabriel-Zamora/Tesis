@@ -44,7 +44,7 @@ function FPM(Z=1:Q,Ay=A,base=Any[])
         pp[i,1:anc] = vpp[1+anc*(i-1):anc+anc*(i-1)]
     end
 
-    return pii,pp,pc
+    return pii,pp,pc,cA
 end
 
 function FPME(Col=C)
@@ -89,10 +89,13 @@ function fSP(vect,X)
     pii = vect[1]
     pp = vect[2]
     pc = vect[3]
-    return FsRA(X) - sum(pp[i,j]*X[i,j] for i=1:lar for j=1:anc) - pii*((sum(X)-1)*Vari(X)+(1-a)*vt) - pc
+    cA = vect[4]
+
+    Rq = - sum(pp[i,j]*X[i,j] for i=1:lar for j=1:anc) - pii*((sum(X)-1)*Vari(X)+(1-a)*vt) - pc
+    return FsA(X,cA,Rq) + Rq
 end
 
-function FsRA(X)
+function FsA(X,cA,Rq)
     sRA = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
     global y = @variable(sRA, y[I], Bin)
 

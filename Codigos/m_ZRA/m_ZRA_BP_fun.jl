@@ -116,12 +116,7 @@ end
 
 function bnp(padre::Int64)
     if esfactible(padre)
-        global vect = Nodos[padre].vect
-        X, Col = mejorcolBP_0(Nodos[padre].var_1)
-       if sum(X) > 1
-           agregarBP_0(X,Col)
-           act()
-       end
+      cg_b(padre)
 
       FPM(Nodos[padre].Z,Ady(Nodos[padre].Z))
       global Nodos[padre].base = MBase(padre)
@@ -129,6 +124,24 @@ function bnp(padre::Int64)
    else
        global Nodos[padre].base = Any[]
    end
+end
+
+function cg_b(padre::Int64)
+    flag = true
+    Z = Nodos[numn].Z
+    while flag
+        q = Q
+        global vect = FPM(Z,Ady(Z))
+        X, Col = mejorcolBP_0(Nodos[padre].var_1)
+        if sum(X) > 1
+            agregarBP_0(X, Col)
+            Z = [Z;Q]
+        end
+        if q == Q
+            act()
+            flag = false
+        end
+    end
 end
 
 function esfactible(nod::Int64,mod = 0)
@@ -193,7 +206,7 @@ function branching()
 
    flag = true
    while flag
-      if (size(NP) == (0,3))|(numn > 10000)#sum(i for i=1:anc)*sum(i for i=1:lar)*L*6)
+      if (size(NP) == (0,3))|(numn > 10000)
          flag = false
       else
           Avanzar(NP[:,:Nodo][1])
@@ -206,29 +219,11 @@ function BnP()
    global Columnas = [(dim,H,W,i:i+H-1,j:j+W-1) for dim in Dimensiones for H=lar:-1:1 for W=anc:-1:1
    if dim==H*W for i=1:lar-H+1 for j=1:anc-W+1]
 
-   global Arboles = Dict()
    global Soluciones = [(0,0,FPMsE(Z),Z)]
    global soluciones = [Set(Z)]
    global FO = [0 0 objective_value(PMsE)]
-   global arbol = 0
+   global arbol = 1
 
-   flag = true
-   maxi = 0
-   while flag
-      global arbol += 1
-      global NP = DataFrame(Nodo = Int64[], FO = Float64[], NF = Int64[])
-      branching()
-      global Arboles[arbol] = Nodos
-      if maxi == maximum(FO[:,3])
-          FPM(1:Q)
-          cg_0(lar+anc)
-      end
-      maxi = maximum(FO[:,3])
-      if arbol == 10 flag = false end
-      if arbol > 1
-         if false# length(Arboles[arbol])==length(Arboles[arbol-1])
-            flag = false
-         end
-      end
-   end
+  global NP = DataFrame(Nodo = Int64[], FO = Float64[], NF = Int64[])
+  branching()
 end

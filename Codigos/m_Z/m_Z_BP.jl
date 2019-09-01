@@ -5,6 +5,12 @@ include(_ref_*"Codigos/m_Z/m_Z_BP_fun.jl")
 
 zonas = Dict()
 Zonas()
+
+vect = FPM()
+CG_0()
+
 BnP()
 
 display(Soluciones)
+
+#Problema, encuentro demasiadas soluciones
