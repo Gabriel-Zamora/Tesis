@@ -201,7 +201,7 @@ function Avanzar(padre::Int64 = numn)
            global Nodos[numn].base = MBase(numn)
            push!(NP,[numn Nodos[numn].VO length(Nodos[numn].var_1)])
 
-           global NP = sort!(NP[NP.FO .<= minimum(FO[:,3]), :],(:FO,order(:NF,rev=true)))
+           global NP = sort!(NP[NP.FO .<= minimum(FO[:,3])-1, :],(:FO,order(:NF,rev=true)))
 
            padre = numn
        end
