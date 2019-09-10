@@ -26,8 +26,9 @@ function ZFija(padre::Int64,fijas::Array{Int64,1} = [0], infac::Array{Int64,1} =
 end
 
 function MBase(padre::Int64)
-    Dt = DataFrame(z = Nodos[padre].Z,v = value.(all_variables(PM)),sum = [sum(zonas[z]) for z in Nodos[padre].Z])
-    Dt = sort(Dt[Dt.v .> 0, :],(:v,:sum),rev=true)
+    Dt   = DataFrame(z = Nodos[padre].Z,v = value.(all_variables(PM)),sum = [sum(zonas[z]) for z in Nodos[padre].Z])
+#    Dt.o = 0.5*ones(length(Dt.v))-abs.(0.5*ones(length(Dt.v))-Dt.v)
+    Dt   = sort(Dt[Dt.v .> 0, :],(:v,:sum),rev=true)
     return [Dt[:,:z] Dt[:,:v]]
 end
 
@@ -168,8 +169,7 @@ function Avanzar(padre::Int64 = numn)
 
        cand = ZFija(padre,Nodos[padre].var_1,Nodos[padre].var_0)
 
-       if (cand == "")|(minimum(FO[:,3]) < Nodos[padre].VO)
-           flag = false
+       if cand == ""
            if (Nodos[padre].var_1 == Nodos[padre].Z)&(~(Set(Nodos[padre].var_1) in soluciones))
                if esfactible(padre,1)&(string(termination_status(PM))== "OPTIMAL")
                    global Soluciones = [Soluciones;(arbol,padre,length(Nodos[padre].var_1),Nodos[padre].var_1)]
@@ -201,7 +201,7 @@ function Avanzar(padre::Int64 = numn)
            global Nodos[numn].base = MBase(numn)
            push!(NP,[numn Nodos[numn].VO length(Nodos[numn].var_1)])
 
-           global NP = sort!(NP[NP.FO .<= minimum(FO[:,3])-1, :],(:FO,order(:NF,rev=true)))
+           global NP = sort!(NP[NP.FO .<= minimum(FO[:,3])-1, :],(order(:NF,rev=true),:FO))
 
            padre = numn
        end

@@ -13,6 +13,56 @@ mutable struct Nodo
    vect
 end
 
+function FPMsE(Z=1:Q)
+    Ay = Ady(Z)
+    global PMsE = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
+    @variable(PMsE, y[Z,I,1:T], Bin)
+
+    @objective(PMsE, Max, sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
+
+    @constraint(PMsE,[f=1:fam-1,a in Ay,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
+    @constraint(PMsE,[k=Z,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
+
+    @constraint(PMsE,[k=Z,t=1:T],sum(y[k,:,t]) == 1)
+    @constraint(PMsE,[k=Z], sum(y[k,esp,:]) == 1)
+
+    optimize!(PMsE)
+
+    return objective_value(PMsE)
+end
+
+function FPMe(Z=1:Q,QF = Z)
+    Ay = Ady(Z)
+    global PMe = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
+
+    @variable(PMe, q[Z] >= 0)
+    @variable(PMe, y[Z,I,1:T] >= 0)
+
+    @objective(PMe, Min, -sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
+
+    @constraint(PMe,[f=1:fam-1,a in Ay,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
+    @constraint(PMe,[k=Z,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
+
+    @constraint(PMe,rp1[k=Z,t=1:T],sum(y[k,:,t])-q[k] == 0)
+    @constraint(PMe,rp2[k=Z], sum(y[k,esp,:])-q[k] == 0)
+
+    @constraint(PMe,rpc,sum(q) <= L)
+    @constraint(PMe,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=Z) <= vt*(lar*anc)*(1-a))
+    @constraint(PMe,rpp[s=1:lar*anc],sum(C[z,s]*q[z] for z=Z) == 1)
+
+    for k in QF for i in I for t=1:T
+        delete_lower_bound(y[k,i,t])
+        @constraint(PMe,y[k,i,t] in MOI.ZeroOne())
+    end end end
+
+    optimize!(PMe)
+    if string(termination_status(PMe)) == "OPTIMAL"
+        return objective_value(PMe)
+    else
+        return 0
+    end
+end
+
 function ZFija(padre::Int64,fijas::Array{Int64,1} = [0], infac::Array{Int64,1} = [0])
     if Nodos[padre].base != Any[]
         Cand = Nodos[padre].base[:,1]
@@ -104,6 +154,18 @@ function act()
    end
 end
 
+function act_VO(N = numn)
+   for i=1:N
+        if Nodos[i].suc == []
+            Nodos[i].VO = -FPMe(Nodos[i].Z,Nodos[i].var_1)
+            if Nodos[i].VO >  maximum(FO[:,3])
+                global NP = NP[NP.Nodo .!= i,:]
+                push!(NP,[i Nodos[i].VO length(Nodos[i].var_1)])
+            end
+        end
+    end
+end
+
 function Ady(Z)
     Ay = []
     for (i,j) in A
@@ -155,13 +217,12 @@ function esfactible(nod::Int64,mod = 0)
 end
 
 function Avanzar(padre::Int64 = numn)
-    global NP = NP[NP.Nodo .!= padre,:]
+   global NP = NP[NP.Nodo .!= padre,:]
 
    bnp(padre)
    cand = ZFija(padre,Nodos[padre].var_1,Nodos[padre].var_0)
 
-   if (cand == "")|(maximum(FO[:,3])>Nodos[padre].VO)|(L<length(Nodos[padre].var_1))
-       flag = false
+   if cand == ""
        if (Nodos[padre].var_1 == Nodos[padre].Z)&(~(Set(Nodos[padre].var_1) in soluciones))
            if esfactible(padre,1)&(string(termination_status(PM))== "OPTIMAL")&(maximum(FO[:,3])<FPMsE(Nodos[padre].Z))
                global Soluciones = [Soluciones;(arbol,padre,objective_value(PMsE),Nodos[padre].var_1)]
@@ -178,7 +239,7 @@ function Avanzar(padre::Int64 = numn)
        global Nodos[numn].var_0 = [Nodos[padre].var_0;cand]
        global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
        global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
-       global Nodos[numn].VO = -objective_value(PM)
+       global Nodos[numn].VO = -FPMe(Nodos[numn].Z,Nodos[numn].var_1)
        global Nodos[numn].base = MBase(numn)
        push!(NP,[numn Nodos[numn].VO length(Nodos[numn].var_1)])
 
@@ -189,12 +250,18 @@ function Avanzar(padre::Int64 = numn)
        global Nodos[numn].var_0 = Nodos[padre].var_0
        global Nodos[numn].Z = ConjZonas(Nodos[numn].var_1,Nodos[numn].var_0)
        global Nodos[numn].vect = FPM(Nodos[numn].Z,Ady(Nodos[numn].Z))
-       global Nodos[numn].VO = -objective_value(PM)
+       global Nodos[numn].VO = -FPMe(Nodos[numn].Z,Nodos[numn].var_1)
        global Nodos[numn].base = MBase(numn)
-       push!(NP,[numn Nodos[numn].VO length(Nodos[numn].var_1)])
+       if (length(Nodos[numn].var_1)<L)|(Nodos[numn].var_1 == Nodos[numn].Z)
+           push!(NP,[numn Nodos[numn].VO length(Nodos[numn].var_1)])
+       end
 
-       global NP = sort!(NP[NP.NF .< L, :])
-       global NP = sort!(NP[NP.FO .>= maximum(FO[:,3]), :],(:FO,:NF),rev=true)
+       global NP = sort!(NP[NP.FO .> maximum(FO[:,3]), :],(:FO,:NF),rev=true)
+   end
+
+   if size(NP)[1] == 0
+       act_VO()
+       global NP = sort!(NP[NP.FO .> maximum(FO[:,3]), :],(:FO,:NF),rev=true)
    end
 end
 

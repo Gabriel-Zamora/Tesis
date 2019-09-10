@@ -8,9 +8,9 @@ Zonas()
 
 vect = FPM()
 CG_0()
-
+@time begin
 BnP()
-
+end
 display(Soluciones)
 
 #Problema, encuentro demasiadas soluciones

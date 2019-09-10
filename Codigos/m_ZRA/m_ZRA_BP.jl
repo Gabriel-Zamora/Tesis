@@ -21,7 +21,7 @@ Adyacencia()
 
 vect = FPM()
 CG_0()
-
+@time begin
 BnP()
-
+end
 display(Soluciones)

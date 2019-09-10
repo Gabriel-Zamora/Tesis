@@ -55,9 +55,9 @@ m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
 @constraint(m,[k=1:Q], sum(y[k,esp,:]) == q[k])
 
 @constraint(m,[f=1:fam-1,a in A,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
-
+@time begin
 optimize!(m)
-
+end
 println(objective_value(m))
 
 

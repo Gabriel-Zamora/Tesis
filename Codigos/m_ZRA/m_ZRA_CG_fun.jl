@@ -63,25 +63,6 @@ function FPME(Col=C)
     return objective_value(PME)
 end
 
-function FPMsE(Z=1:Q)
-    Ay = Ady(Z)
-    global PMsE = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
-    @variable(PMsE, q[Z] == 1)
-    @variable(PMsE, y[Z,I,1:T], Bin)
-
-    @objective(PMsE, Max, sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
-
-    @constraint(PMsE,[f=1:fam-1,a in Ay,t=1:T], sum(y[k,i,t] for i in familias[f] for k in a) <= 1)
-    @constraint(PMsE,[k=Z,t=2:T,f=1:fam-1], sum(y[k,i,τ] for i in familias[f] for τ=t-1:t) <= 1)
-
-    @constraint(PMsE,[k=Z,t=1:T],sum(y[k,:,t])-q[k] == 0)
-    @constraint(PMsE,[k=Z], sum(y[k,esp,:])-q[k] == 0)
-
-    optimize!(PMsE)
-
-    return objective_value(PMsE)
-end
-
 function fSP(vect,X)
     pii = vect[1]
     pp = vect[2]
