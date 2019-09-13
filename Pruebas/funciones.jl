@@ -17,7 +17,7 @@ end
 module BB
 function F()
     _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-    include(_ref_*"Codigos/m_ZRA/m_ZRA_directo.jl")
+    include(_ref_*"Codigos/m_ZRA/m_ZRA_BB.jl")
 end
 end
 

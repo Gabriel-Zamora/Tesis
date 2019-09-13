@@ -4,7 +4,7 @@ include(_ref_*"Codigos/Instancias/Datos_GA2018.jl")
 lar = 3     #6
 anc = 3     #7
 
-L = 6
+L = 5
 
 #Interpolación
 using Interpolations

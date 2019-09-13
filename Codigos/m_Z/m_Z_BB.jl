@@ -1,8 +1,7 @@
-_ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_ * "Codigos/m_Z/parametros.jl")
+ _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
+include(_ref_*"Codigos/m_Z/parametros.jl")
 include(_ref_*"Codigos/m_Z/m_Z_fun.jl")
-
-setparam!(gurobi_env, "NodefileStart", 0.5)
+include(_ref_*"Codigos/m_Z/m_Z_BB_fun.jl")
 
 # #Cantidad de cuarteles
 Q = sum(i for i = 1:lar) * sum(j for j = 1:anc)
@@ -41,23 +40,6 @@ Zonas()
 varianzas = zeros(Q)
 for k=1:Q varianzas[k] = Vari(zonas[k]) end
 
-#Modelo
-# m = Model(with_optimizer(GLPK.Optimizer))
-m = Model(with_optimizer(
-    Gurobi.Optimizer,
-    Presolve = 0,
-    gurobi_env,
-    OutputFlag = 0
-))
+BnB()
 
-@variable(m, q[1:Q], Bin)
-
-@objective(m, Min, sum(q))
-
-@constraint( m, (1 - a) * vt * (lar * anc - sum(q)) >= sum((sum(C[i, :]) - 1) *
-            varianzas[i] * q[i] for i = 1:Q))
-@constraint(m, [j = 1:lar*anc], sum(C[i, j] * q[i] for i = 1:Q) == 1)
-
-optimize!(m)
-
-println(objective_value(m))
+#display(Soluciones)

@@ -1,9 +1,8 @@
 _ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_*"Codigos/m_ZA/parametros.jl")
-include(_ref_*"Codigos/m_ZA/m_ZA_fun.jl")
+include(_ref_ * "Codigos/m_ZRA/parametros.jl")
+include(_ref_ * "Codigos/m_ZRA/m_ZRA_fun.jl")
+include(_ref_ * "Codigos/m_ZRA/m_ZRA_BB_fun.jl")
 
-setparam!(gurobi_env, "NodefileStart", 0.5)
-@time begin
 # #Cantidad de cuarteles
 Q = sum(i for i=1:lar)*sum(j for j=1:anc)
 #Cuarteles
@@ -37,23 +36,9 @@ Adyacencia()
 varianzas = zeros(Q)
 for k=1:Q varianzas[k] = Vari(zonas[k]) end
 
-#Modelo
-m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
+Z = [k for k=1:lar*anc]
 
-@variable(m, q[1:Q], Bin)
-@variable(m, y[1:Q,I], Bin)
+BnB()
 
-@objective(m, Max, sum(precio[i]*rendimientos[k,i]*y[k,i] for i in I for k in 1:Q))
-
-@constraint(m, (1-a)*vt*(lar*anc-sum(q)) >= sum((sum(C[k,:])-1)*varianzas[k]*sum(q[k]) for k=1:Q))
-@constraint(m,[j=1:lar*anc],sum(C[k,j]*sum(q[k]) for k=1:Q) == 1)
-@constraint(m, sum(q) <= L)
-
-@constraint(m,[k=1:Q], sum(y[k,:]) == q[k])
-
-@constraint(m,[f=1:fam-1,a in A], sum(y[k,i] for i in familias[f] for k in a) <= 1)
-
-optimize!(m)
-
-println(objective_value(m))
-end
+FPR()
+#display(Soluciones)
