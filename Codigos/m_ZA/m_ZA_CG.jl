@@ -16,4 +16,5 @@ Rendimientos()
 Adyacencia()
 
 CG_0()
-println(FPME(C))
+#FPME(C)
+#println(FPME(C))

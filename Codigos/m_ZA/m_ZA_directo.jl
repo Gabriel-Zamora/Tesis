@@ -3,7 +3,7 @@ include(_ref_*"Codigos/m_ZA/parametros.jl")
 include(_ref_*"Codigos/m_ZA/m_ZA_fun.jl")
 
 setparam!(gurobi_env, "NodefileStart", 0.5)
-@time begin
+
 # #Cantidad de cuarteles
 Q = sum(i for i=1:lar)*sum(j for j=1:anc)
 #Cuarteles
@@ -53,7 +53,6 @@ m = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
 
 @constraint(m,[f=1:fam-1,a in A], sum(y[k,i] for i in familias[f] for k in a) <= 1)
 
-optimize!(m)
+#optimize!(m)
 
-println(objective_value(m))
-end
+#println(objective_value(m))
