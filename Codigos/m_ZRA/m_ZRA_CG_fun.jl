@@ -29,6 +29,17 @@ function FPM(Z=1:Q,Ay=A,base=Any[])
 
     optimize!(PM)
 
+    global cA = [[] [] []]
+    for z in Z
+        for t in 1:T
+            for f=1:fam-1
+                if sum(value(y[z,i,t]) for i=familias[f]) == 1
+                    global cA = [cA;z f t]
+                end
+            end
+        end
+    end
+
     pii = dual(rpii)
     pc = dual(rpc)
     vpp = [dual(rpp[s]) for s=1:lar*anc]
@@ -37,7 +48,7 @@ function FPM(Z=1:Q,Ay=A,base=Any[])
         pp[i,1:anc] = vpp[1+anc*(i-1):anc+anc*(i-1)]
     end
 
-    return pii,pp,pc
+    return pii,pp,pc,cA
 end
 
 function FPME(Col=C)
@@ -67,12 +78,13 @@ function fSP(vect,X)
     pii = vect[1]
     pp = vect[2]
     pc = vect[3]
+    cA = vect[4]
 
     Rq = - sum(pp[i,j]*X[i,j] for i=1:lar for j=1:anc) - pii*((sum(X)-1)*Vari(X)+(1-a)*vt) - pc
-    return FsRA(X) + Rq
+    return FsRA(X,cA) + Rq
 end
 
-function FsRA(X)
+function FsRA(X,cA)
     sRA = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
     @variable(sRA, y[I,1:T], Bin)
 
@@ -82,6 +94,12 @@ function FsRA(X)
 
     @constraint(sRA,[t=1:T], sum(y[:,t]) == 1)
     @constraint(sRA, sum(y[esp,:]) == 1)
+
+for ac in 1:size(cA)[1]
+    if EsAdy(X,cA[ac,1])
+        @constraint(sRA, sum(y[esp,cA[ac,3]] for esp in familias[cA[ac,2]]) <= 0)
+    end
+end
 
     optimize!(sRA)
 
@@ -101,6 +119,29 @@ function probar(x)
         end
     end
     return prueba
+end
+
+function EsAdy(X,n1)
+    z1 = zonas[n1]
+    z2 = X
+    if sum(z1.*z2) == 0
+        aux = 0
+        for j=1:anc-1
+            aux += z1[:,j]'*z2[:,j+1]
+            aux += z1[:,j+1]'*z2[:,j]
+        end
+        for i=1:lar-1
+            aux += z1[i,:]'*z2[i+1,:]
+            aux += z1[i+1,:]'*z2[i,:]
+        end
+        if aux > 0
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
 end
 
 function agregar_0(x, Col=0)

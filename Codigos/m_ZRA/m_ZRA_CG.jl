@@ -25,10 +25,10 @@ Adyacencia()
 
 CG_0()
 #println(FPME(C))
-#FPME(C)
+FPME(C)
 
-BnB(:CG)
-FPM()
+#BnB(:CG)
+#FPM()
 #display(Soluciones)
 
 

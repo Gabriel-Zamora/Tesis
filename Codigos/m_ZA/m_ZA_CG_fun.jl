@@ -167,10 +167,6 @@ function cg_0(niter = 1e6)
 end
 
 function CG_0()
-    global Dimensiones = sort(unique([i*j for i=1:max(lar,anc) for j=1:min(lar,anc) if (i*j != 1)&(i*j != lar*anc)]),rev=true)
-    global Columnas = [(dim,H,W,i:i+H-1,j:j+W-1) for dim in Dimensiones for H=lar:-1:1 for W=anc:-1:1
-    if dim==H*W for i=1:lar-H+1 for j=1:anc-W+1]
-
     global vect = FPM()
 
     flag = true

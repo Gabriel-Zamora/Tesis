@@ -81,7 +81,7 @@ function bnp(padre::Int64)
     if esfactible(padre)
       cg_b(padre)
 
-      FPM(Nodos[padre].Z,Ady(Nodos[padre].Z))
+      global Nodos[padre].vect = FPM(Nodos[padre].Z,Ady(Nodos[padre].Z))
       global Nodos[padre].base = MBase(padre)
 
    else
@@ -89,8 +89,36 @@ function bnp(padre::Int64)
    end
 end
 
+function es_cg(padre::Int64)
+    flag = false
+    if padre > 1
+        pred = Nodos[padre].pred[1]
+        M_padre = Nodos[padre].vect[1]*ones(lar,anc)+Nodos[padre].vect[2]+Nodos[padre].vect[3]*ones(lar,anc)
+        M_pred = Nodos[pred].vect[1]*ones(lar,anc)+Nodos[pred].vect[2]+Nodos[pred].vect[3]*ones(lar,anc)
+
+        if Nodos[padre].var_1 == Any[]
+            M_bool = M_pred .< M_padre
+        else
+            M_bool = M_pred + ones(lar,anc) .< M_padre - sum(zonas[k] for k in Nodos[padre].var_1)*maximum(rendimiento)*T
+        end
+
+        flag = true
+        for i in 1:lar
+            for j in 1:anc
+                if M_bool[i,j]
+                    flag = false
+                end
+            end
+        end
+    end
+    return flag
+end
+
 function cg_b(padre::Int64)
     flag = true
+    if es_cg(padre)
+        flag = false
+    end
     Z = Nodos[numn].Z
     while flag
         q = Q
