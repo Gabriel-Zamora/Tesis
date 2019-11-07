@@ -1,6 +1,6 @@
 include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
 
-lar = 20     #6
+lar = 17     #6
 anc = 5     #7
 
 #Interpolación
