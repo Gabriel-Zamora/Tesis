@@ -2,7 +2,7 @@
                     # GENERACION DE COLUMNAS #
 ###############################################################################
 function FPM(Z=1:Q,base=Any[])
-    global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
+    global PM = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
     @variable(PM, q[Z] >= 0)
     @objective(PM, Min, sum(q))
     @constraint(PM,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z in Z) <= vt*(lar*anc)*(1-a))
@@ -29,7 +29,7 @@ end
 
 function FPME(Col)
     Q, = size(Col)
-    global PME = Model(with_optimizer(Gurobi.Optimizer,Presolve=0,OutputFlag=0,gurobi_env))
+    global PME = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
     global q_pe = @variable(PME, q[1:Q], Bin)
     @objective(PME, Min, sum(q))
     @constraint(PME,rpii, sum(((sum(Col[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z=1:Q) <= vt*(lar*anc)*(1-a))

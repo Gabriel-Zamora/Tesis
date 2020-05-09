@@ -2,7 +2,7 @@
                     # GENERACION DE COLUMNAS#
 ###############################################################################
 function FPM(Z=1:Q,Ay=A,base=Any[])
-    global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
+    global PM = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
 
     @variable(PM, q[Z] >= 0)
     @variable(PM, y[Z,I] >= 0)
@@ -49,7 +49,7 @@ end
 
 function FPME(Col=C)
     Q, = size(Col)
-    global PME = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
+    global PME = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env),"OutputFlag" => 0))
     @variable(PME, q[1:Q], Bin)
     @variable(PME, y[1:Q,I], Bin)
 
@@ -79,7 +79,7 @@ function fSP(vect,X)
 end
 
 function FsA(X,cA,Rq)
-    sRA = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
+    sRA = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
     global y = @variable(sRA, y[I], Bin)
 
     @objective(sRA, Min, -sum(precio[i]*rendimiento[i]*sum(X)*y[i] for i in I))

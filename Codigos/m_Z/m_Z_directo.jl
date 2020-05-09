@@ -43,12 +43,7 @@ for k=1:Q varianzas[k] = Vari(zonas[k]) end
 
 #Modelo
 # m = Model(with_optimizer(GLPK.Optimizer))
-m = Model(with_optimizer(
-    Gurobi.Optimizer,
-    Presolve = 0,
-    gurobi_env,
-    OutputFlag = 0
-))
+m = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
 
 @variable(m, q[1:Q], Bin)
 
