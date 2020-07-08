@@ -15,7 +15,7 @@ end
 
 function FPR(Z=1:Q)
     Ay = Ady(Z)
-    global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
+    global PM = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
 
     @variable(PM, q[Z] >= 0)
     @variable(PM, y[Z,I,1:T] >= 0)
@@ -39,7 +39,7 @@ end
 
 function FPMsE(Z=1:Q)
     Ay = Ady(Z)
-    global PMsE = Model(with_optimizer(Gurobi.Optimizer, Presolve=0,OutputFlag=0,gurobi_env))
+    global PMsE = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env),"OutputFlag" => 0))
     @variable(PMsE, y[Z,I,1:T], Bin)
 
     @objective(PMsE, Max, sum(precio[i]*rendimientos[k,i]*y[k,i,t] for t=1:T for i in I for k in Z))
@@ -57,7 +57,7 @@ end
 
 function FPMe(Z=1:Q,QF = Z)
     Ay = Ady(Z)
-    global PMe = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
+    global PMe = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env),"OutputFlag" => 0))
 
     @variable(PMe, q[Z] >= 0)
     @variable(PMe, y[Z,I,1:T] >= 0)

@@ -14,7 +14,7 @@ mutable struct Nodo
 end
 
 function FPR(Z=1:Q)
-    global PM = Model(with_optimizer(Gurobi.Optimizer,OutputFlag=0,gurobi_env))
+    global PM = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env),"OutputFlag" => 0))
     @variable(PM, q[Z] >= 0)
     @objective(PM, Min, sum(q))
     @constraint(PM,rpii, sum(((sum(C[z,:])-1)*varianzas[z]+(1-a)*vt)*q[z] for z in Z) <= vt*(lar*anc)*(1-a))

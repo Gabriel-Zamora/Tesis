@@ -55,4 +55,4 @@ m = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolv
 
 optimize!(m)
 
-println(objective_value(m))
+display(objective_value(m))

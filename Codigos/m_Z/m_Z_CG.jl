@@ -9,5 +9,4 @@ Zonas()
 vect = FPM()
 CG_0()
 
-#println(FPME(C))
-FPME(C)
+display(FPME(C))
