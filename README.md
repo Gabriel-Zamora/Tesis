@@ -1,2 +1,2 @@
 # Tesis
-Tengo almacenados todos los códigos que desarrollé para mi tesis y la escritura de papers que tienen que ver con el problema de zonas de manejo.
+Tengo almacenados todos los códigos que desarrollé para mi tesis.
