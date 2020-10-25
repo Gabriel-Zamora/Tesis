@@ -39,6 +39,8 @@ for k=1:Q varianzas[k] = Vari(zonas[k]) end
 
 #Modelo
 m = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
+set_time_limit_sec(m, 100)
+#set_time_limit_sec(m, 20000)
 
 @variable(m, q[1:Q], Bin)
 @variable(m, y[1:Q,I,1:T], Bin)
@@ -58,30 +60,4 @@ m = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolv
 
 optimize!(m)
 
-println(objective_value(m))
-
-
-# println("")
-# for t=1:T
-#     Matriz = zeros(lar,anc)
-#     for k=1:Q
-#         if value(q[k])>0
-#             for i in I
-#                 if value(y[k,i,t])>0
-#                     for f=1:fam
-#                         if i in familias[f]
-#                             Matriz = Matriz + f*zonas[k]
-#                         end
-#                     end
-#                 end
-#             end
-#         end
-#     end
-#     display(floor.(Int,Matriz))
-# end
-
-
-# li =  list_of_constraint_types(m)
-#
-# display(sum(num_constraints(m,li[i][1],li[i][2]) for i=1:length(li)))
-#
+#println(objective_value(m))
