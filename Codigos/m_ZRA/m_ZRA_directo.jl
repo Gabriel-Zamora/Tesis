@@ -39,8 +39,8 @@ for k=1:Q varianzas[k] = Vari(zonas[k]) end
 
 #Modelo
 m = Model(optimizer_with_attributes(() -> Gurobi.Optimizer(gurobi_env), "Presolve" => 0,"OutputFlag" => 0))
-set_time_limit_sec(m, 100)
-#set_time_limit_sec(m, 20000)
+#set_time_limit_sec(m, 100)
+set_time_limit_sec(m, 20000)
 
 @variable(m, q[1:Q], Bin)
 @variable(m, y[1:Q,I,1:T], Bin)

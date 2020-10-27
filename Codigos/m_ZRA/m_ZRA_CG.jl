@@ -25,5 +25,4 @@ Adyacencia()
 CG_0()
 
 FPME(C)
-
 #println(FPME(C))

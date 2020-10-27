@@ -3,9 +3,8 @@ include(_ref_*"Pruebas/funciones.jl")
 
 Lista = [10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 
-for l in 1:7 #19
+for l in 1:19
     parametros(Lista[l])
-
     # #BB
      tiempo = @elapsed BB.F()
      dt = CSV.read(_ref_*"/Pruebas/BB.csv",copycols=true)
@@ -29,4 +28,7 @@ for l in 1:7 #19
     li =  list_of_constraint_types(CG.PM)
     dt.C[l] = sum(num_constraints(CG.PM,li[i][1],li[i][2]) for i=1:length(li))
     CSV.write(_ref_*"/Pruebas/CG.csv",dt)
+
+    display(Lista[l])
+    display(length(CG.A))
 end
