@@ -1,4 +1,4 @@
-include(pwd()*"/Codigos/Instancias/ZRA20.jl")
+include(pwd()*"/Codigos/Instancias/ZRA42.jl")
 
 using Statistics, JuMP, Gurobi, Plotly
 gurobi_env = Gurobi.Env();
