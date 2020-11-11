@@ -3,5 +3,5 @@
 *.jl.mem
 deps/deps.jl
 
-/Pruebas/*.ipynb
-/Pruebas/*ipynb*
+*.ipynb
+*ipynb*
