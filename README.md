@@ -1,4 +1,4 @@
-Respositorio de Tesis de Magister Gabriel Esteban Zamora Munoz
+Respositorio de Tesis de Magister de Gabriel Zamora Munoz
 
 
 ## DELINEACIÓN DE ZONAS DE MANEJO Y ROTACIÓN DE CULTIVOS CON RESTRICCIONES DE ADYACENCIA USANDO COLUMN AND ROW GENERATIO
