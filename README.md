@@ -1,6 +1,15 @@
+Respositorio de Tesis de Magister Gabriel Esteban Zamora Munoz
+
+
 ## DELINEACIÓN DE ZONAS DE MANEJO Y ROTACIÓN DE CULTIVOS CON RESTRICCIONES DE ADYACENCIA USANDO COLUMN AND ROW GENERATION
 
 **Tesis para optar al grado de Magíster en ciencias de la Ingeniería Industrial y al título de Ingeniero Civil Industrial**
+
+
+
+
+
+# Resumen
 
 En este trabajo se aborda el problema integrado de delineación de zonas de manejo y planificación de cultivos aplicado en agricultura orgánica. Se busca encontrar un plan de
 cultivos que maximice el rendimiento de un terreno agrícola a la vez que se tiene cuidado del impacto medioambiental. Para ello se genera una partición del predio conformada por
