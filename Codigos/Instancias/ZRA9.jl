@@ -1,5 +1,5 @@
-include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
-include(_ref_*"Codigos/Instancias/Datos_GA2018.jl")
+include(pwd()*"/Codigos/Instancias/Datos_CEA2013.jl")
+include(pwd()*"/Codigos/Instancias/Datos_GA2018.jl")
 
 lar = 3     #6
 anc = 3     #7

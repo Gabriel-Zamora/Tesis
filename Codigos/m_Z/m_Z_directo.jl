@@ -1,6 +1,5 @@
-_ref_ = "C:/Users/gz_am/Dropbox/u/Proyecto de Tésis/Julia JuMP 0.19/Tesis/"
-include(_ref_ * "Codigos/m_Z/parametros.jl")
-include(_ref_*"Codigos/m_Z/m_Z_fun.jl")
+include(pwd()*"/Codigos/m_Z/parametros.jl")
+include(pwd()*"/Codigos/m_Z/m_Z_fun.jl")
 
 setparam!(gurobi_env, "NodefileStart", 0.5)
 

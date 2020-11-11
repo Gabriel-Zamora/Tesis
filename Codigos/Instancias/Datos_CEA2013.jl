@@ -1,5 +1,5 @@
 using DataFrames, CSV
-datos = CSV.read(_ref_*"Codigos/Instancias/Datos_CEA2013.csv")
+datos = CSV.read(pwd()*"/Codigos/Instancias/Datos_CEA2013.csv")
 
 #Matriz con la muestras
 muestras = zeros(6,7)

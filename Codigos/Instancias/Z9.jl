@@ -1,4 +1,4 @@
-include(_ref_*"Codigos/Instancias/Datos_CEA2013.jl")
+include(pwd()*"/Codigos/Instancias/Datos_CEA2013.jl")
 
 lar = 3     #6
 anc = 3     #7
