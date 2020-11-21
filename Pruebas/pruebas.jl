@@ -22,6 +22,7 @@ for l in 1:19
     dt.Z[l] = CG.Q
 #    dt.OV[l] = maximum(CG.FO[:,3])/Lista[l]
     dt.OV[l] = objective_value(CG.PME)/Lista[l]
+#    dt.OV[l] = -objective_value(CG.PM)/Lista[l]
     dt.T[l] = tiempo
     dt.V[l] = length(all_variables(CG.PM))
     li =  list_of_constraint_types(CG.PM)
