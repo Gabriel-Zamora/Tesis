@@ -1,7 +1,7 @@
 Respositorio de Tesis de Magister de Gabriel Zamora Munoz
 
 
-## [DELINEACIÓN DE ZONAS DE MANEJO Y ROTACIÓN DE CULTIVOS CON RESTRICCIONES DE ADYACENCIA USANDO COLUMN AND ROW GENERATIO](https://link.springer.com/article/10.1007/s11750-020-00580-z)
+## DELINEACIÓN DE ZONAS DE MANEJO Y ROTACIÓN DE CULTIVOS CON RESTRICCIONES DE ADYACENCIA USANDO COLUMN AND ROW GENERATION
 
 # Resumen
 
@@ -20,3 +20,7 @@ valor de la función objetivo del problema maestro.
 
 La estrategia algorítmica fue implementada en JuMP, un lenguaje de modelado para optimización alojado en Julia. Los resultados del conjunto de instancias ensayadas muestran
 la relevancia del uso de la estrategia de descomposición a la hora de resolver el problema.
+
+# Publicaciones
+- [Decomposition-based heuristic for the zoning and crop planning problem with adjacency constraints](https://link.springer.com/article/10.1007/s11750-020-00580-z)
+- [A Branch-and-Price Decomposition Algorithm Applied to a Management Zone Delineation and Crop Planning Problem](https://sites.google.com/view/mipworkshop2019/posters?authuser=0)
